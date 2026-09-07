@@ -12,40 +12,57 @@ let package = Package(
         .visionOS(.v27),
     ],
     products: [
-        .library(
-            name: "Standard Library Extensions",
-            targets: ["Standard Library Extensions"]
-        ),
-        .library(
-            name: "Standard Library Extensions Test Support",
-            targets: ["Standard Library Extensions Test Support"]
-        ),
+        .library(name: "Standard Library Extensions", targets: ["Standard Library Extensions"]),
+        .library(name: "Standard Library Extensions Standard Library Integration", targets: ["Standard Library Extensions Standard Library Integration"]),
+        .library(name: "Standard Library Extensions Foundation Library Integration", targets: ["Standard Library Extensions Foundation Library Integration"]),
+        .library(name: "Standard Library Extensions Test Support", targets: ["Standard Library Extensions Test Support"]),
     ],
+    dependencies: [],
     targets: [
         .target(
-            name: "Standard Library Extensions"
+            name: "Standard Library Extensions",
+            dependencies: [
+            ],
+            path: "Sources/Standard Library Extensions"
         ),
-
+        .target(
+            name: "Standard Library Extensions Standard Library Integration",
+            dependencies: [
+                .target(name: "Standard Library Extensions"),
+            ],
+            path: "Sources/Standard Library Extensions Standard Library Integration"
+        ),
+        .target(
+            name: "Standard Library Extensions Foundation Library Integration",
+            dependencies: [
+                .target(name: "Standard Library Extensions"),
+                .target(name: "Standard Library Extensions Standard Library Integration"),
+            ],
+            path: "Sources/Standard Library Extensions Foundation Library Integration"
+        ),
         .target(
             name: "Standard Library Extensions Test Support",
             dependencies: [
-                "Standard Library Extensions"
+                .target(name: "Standard Library Extensions"),
             ],
             path: "Tests/Support"
         ),
         .testTarget(
             name: "Standard Library Extensions Tests",
             dependencies: [
-                "Standard Library Extensions",
-                "Standard Library Extensions Test Support",
-            ]
+                .target(name: "Standard Library Extensions"),
+                .target(name: "Standard Library Extensions Test Support"),
+                .target(name: "Standard Library Extensions Standard Library Integration"),
+                .target(name: "Standard Library Extensions Foundation Library Integration"),
+            ],
+            path: "Tests/Standard Library Extensions Tests"
         ),
     ],
     swiftLanguageModes: [.v6]
 )
 
-for target in package.targets where ![.system, .binary, .plugin, .macro].contains(target.type) {
-    let ecosystem: [SwiftSetting] = [
+for target in package.targets {
+    target.swiftSettings = [
         .strictMemorySafety(),
         .enableUpcomingFeature("ExistentialAny"),
         .enableUpcomingFeature("InternalImportsByDefault"),
@@ -54,8 +71,4 @@ for target in package.targets where ![.system, .binary, .plugin, .macro].contain
         .enableExperimentalFeature("Lifetimes"),
         .enableUpcomingFeature("InferIsolatedConformances"),
     ]
-
-    let package: [SwiftSetting] = []
-
-    target.swiftSettings = (target.swiftSettings ?? []) + ecosystem + package
 }
