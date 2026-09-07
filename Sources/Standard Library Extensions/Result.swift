@@ -3,10 +3,13 @@ public enum Result<Success: ~Copyable, Failure: Swift.Error>: ~Copyable {
     case failure(Failure)
 }
 
-extension Result: Copyable where Success: Copyable {}
-extension Result: Sendable where Success: Sendable, Failure: Sendable {}
-extension Result: Equatable where Success: Equatable & Copyable, Failure: Equatable {}
-extension Result: Hashable where Success: Hashable & Copyable, Failure: Hashable {}
+extension Result: Swift.Copyable where Success: Swift.Copyable {}
+
+extension Result: Swift.Sendable where Success: Swift.Sendable, Failure: Swift.Sendable {}
+
+extension Result: Swift.Equatable where Success: Swift.Equatable & Copyable, Failure: Swift.Equatable {}
+
+extension Result: Swift.Hashable where Success: Swift.Hashable & Copyable, Failure: Swift.Hashable {}
 
 extension Result where Success: ~Copyable {
 

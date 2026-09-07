@@ -1,6 +1,5 @@
 #if !hasFeature(Embedded)
-
-    extension Actor {
+extension Actor {
 
         @inlinable
         public func run<R, Failure: Swift.Error>(
@@ -16,8 +15,11 @@
             try await body(self)
         }
     }
+#endif
 
-    extension Actor {
+
+#if !hasFeature(Embedded)
+extension Actor {
 
         @inlinable
         public func run<R: ~Copyable, Failure: Swift.Error>(
@@ -33,5 +35,4 @@
             try await body(self)
         }
     }
-
 #endif

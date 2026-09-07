@@ -13,8 +13,8 @@ let package = Package(
     ],
     products: [
         .library(name: "Standard Library Extensions", targets: ["Standard Library Extensions"]),
-        .library(name: "Standard Library Extensions Standard Library Integration", targets: ["Standard Library Extensions Standard Library Integration"]),
-        .library(name: "Standard Library Extensions Foundation Library Integration", targets: ["Standard Library Extensions Foundation Library Integration"]),
+
+        .library(name: "Standard Library Extensions Foundation Integration", targets: ["Standard Library Extensions Foundation Integration"]),
         .library(name: "Standard Library Extensions Test Support", targets: ["Standard Library Extensions Test Support"]),
     ],
     dependencies: [],
@@ -25,20 +25,13 @@ let package = Package(
             ],
             path: "Sources/Standard Library Extensions"
         ),
+        
         .target(
-            name: "Standard Library Extensions Standard Library Integration",
+            name: "Standard Library Extensions Foundation Integration",
             dependencies: [
                 .target(name: "Standard Library Extensions"),
             ],
-            path: "Sources/Standard Library Extensions Standard Library Integration"
-        ),
-        .target(
-            name: "Standard Library Extensions Foundation Library Integration",
-            dependencies: [
-                .target(name: "Standard Library Extensions"),
-                .target(name: "Standard Library Extensions Standard Library Integration"),
-            ],
-            path: "Sources/Standard Library Extensions Foundation Library Integration"
+            path: "Sources/Standard Library Extensions Foundation Integration"
         ),
         .target(
             name: "Standard Library Extensions Test Support",
@@ -52,8 +45,7 @@ let package = Package(
             dependencies: [
                 .target(name: "Standard Library Extensions"),
                 .target(name: "Standard Library Extensions Test Support"),
-                .target(name: "Standard Library Extensions Standard Library Integration"),
-                .target(name: "Standard Library Extensions Foundation Library Integration"),
+                .target(name: "Standard Library Extensions Foundation Integration"),
             ],
             path: "Tests/Standard Library Extensions Tests"
         ),
