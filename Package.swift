@@ -17,11 +17,14 @@ let package = Package(
         .library(name: "Standard Library Extensions Foundation Integration", targets: ["Standard Library Extensions Foundation Integration"]),
         .library(name: "Standard Library Extensions Test Support", targets: ["Standard Library Extensions Test Support"]),
     ],
-    dependencies: [],
+    dependencies: [
+        .package(url: "https://github.com/swift-atoms/swift-time.git", branch: "main"),
+    ],
     targets: [
         .target(
             name: "Standard Library Extensions",
             dependencies: [
+                .product(name: "Time", package: "swift-time"),
             ],
             path: "Sources/Standard Library Extensions"
         ),
