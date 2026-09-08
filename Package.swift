@@ -12,45 +12,21 @@ let package = Package(
         .visionOS(.v27),
     ],
     products: [
-        .library(name: "Standard Library Extensions", targets: ["Standard Library Extensions"]),
-
-        .library(name: "Standard Library Extensions Foundation Integration", targets: ["Standard Library Extensions Foundation Integration"]),
-        .library(name: "Standard Library Extensions Test Support", targets: ["Standard Library Extensions Test Support"]),
+        .library(
+            name: "Standard Library Extensions",
+            targets: ["Standard Library Extensions"]
+        ),
     ],
-    dependencies: [
-        .package(url: "https://github.com/swift-atoms/swift-time.git", branch: "main"),
-    ],
+    dependencies: [],
     targets: [
         .target(
-            name: "Standard Library Extensions",
-            dependencies: [
-                .product(name: "Time", package: "swift-time"),
-            ],
-            path: "Sources/Standard Library Extensions"
-        ),
-        
-        .target(
-            name: "Standard Library Extensions Foundation Integration",
-            dependencies: [
-                .target(name: "Standard Library Extensions"),
-            ],
-            path: "Sources/Standard Library Extensions Foundation Integration"
-        ),
-        .target(
-            name: "Standard Library Extensions Test Support",
-            dependencies: [
-                .target(name: "Standard Library Extensions"),
-            ],
-            path: "Tests/Support"
+            name: "Standard Library Extensions"
         ),
         .testTarget(
             name: "Standard Library Extensions Tests",
             dependencies: [
                 .target(name: "Standard Library Extensions"),
-                .target(name: "Standard Library Extensions Test Support"),
-                .target(name: "Standard Library Extensions Foundation Integration"),
-            ],
-            path: "Tests/Standard Library Extensions Tests"
+            ]
         ),
     ],
     swiftLanguageModes: [.v6]
