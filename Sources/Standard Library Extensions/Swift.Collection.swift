@@ -46,7 +46,7 @@ extension Swift.Collection {
     public func withContiguousStorageIfAvailable<T, E: Swift.Error>(
         body: (UnsafeBufferPointer<Element>) throws(E) -> T
     ) throws(E) -> T? {
-        var result: Result<T, E>?
+        var result: Swift.Result<T, E>?
         _ = self.withContiguousStorageIfAvailable { buffer in
             do throws(E) {
                 result = .success(try unsafe body(buffer))

@@ -1,3 +1,3 @@
-extension FlattenSequence {
+extension Swift.FlattenSequence {
 
 }

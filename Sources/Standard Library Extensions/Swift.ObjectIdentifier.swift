@@ -1,3 +1,3 @@
-extension ObjectIdentifier {
+extension Swift.ObjectIdentifier {
 
 }

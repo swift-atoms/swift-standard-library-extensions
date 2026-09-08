@@ -1,5 +1,5 @@
 #if !hasFeature(Embedded)
-extension AnyHashable {
+extension Swift.AnyHashable {
 
     }
 #endif

@@ -1,3 +1,3 @@
-extension OpaquePointer {
+extension Swift.OpaquePointer {
 
 }

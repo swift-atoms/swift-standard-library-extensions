@@ -1,6 +1,6 @@
 import Testing
 
-@testable import Standard_Library_Extensions
+@testable import Result
 
 @Suite
 struct `Array - Extensions` {

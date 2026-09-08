@@ -1,3 +1,3 @@
-extension LazyDropWhileSequence {
+extension Swift.LazyDropWhileSequence {
 
 }

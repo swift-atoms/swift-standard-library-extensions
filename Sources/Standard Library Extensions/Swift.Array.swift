@@ -37,7 +37,7 @@ extension Swift.Array {
     public func withUnsafeBufferPointer<T, E: Swift.Error>(
         body: (UnsafeBufferPointer<Element>) throws(E) -> T
     ) throws(E) -> T {
-        let result: Result<T, E> = self.withUnsafeBufferPointer { buffer in
+        let result: Swift.Result<T, E> = self.withUnsafeBufferPointer { buffer in
             do throws(E) {
                 return .success(try unsafe body(buffer))
             } catch {
@@ -52,7 +52,7 @@ extension Swift.Array {
     public mutating func withUnsafeMutableBufferPointer<T, E: Swift.Error>(
         body: (inout UnsafeMutableBufferPointer<Element>) throws(E) -> T
     ) throws(E) -> T {
-        var result: Result<T, E>?
+        var result: Swift.Result<T, E>?
         self.withUnsafeMutableBufferPointer { buffer in
             do throws(E) {
                 result = .success(try unsafe body(&buffer))

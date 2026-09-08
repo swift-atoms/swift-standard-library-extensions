@@ -1,3 +1,3 @@
-extension JoinedSequence {
+extension Swift.JoinedSequence {
 
 }

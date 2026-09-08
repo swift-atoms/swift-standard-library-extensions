@@ -1,3 +1,3 @@
-extension LazyCollection {
+extension Swift.LazyCollection {
 
 }

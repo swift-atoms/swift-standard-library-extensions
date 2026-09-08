@@ -1,4 +1,4 @@
-extension Set<String> {
+extension Swift.Set<String> {
 
     @inlinable
     public static var swift: `Swift` {
@@ -11,7 +11,7 @@ extension Set<String> {
     }
 }
 
-extension Set<String>.`Swift` {
+extension Swift.Set<String>.`Swift` {
 
     public static let keywords: Set<String> = [
         "as", "break", "case", "catch", "class", "continue", "default", "defer",

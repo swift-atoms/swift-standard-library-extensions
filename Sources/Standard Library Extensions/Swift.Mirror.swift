@@ -1,5 +1,5 @@
 #if !hasFeature(Embedded)
-extension Mirror {
+extension Swift.Mirror {
 
     }
 #endif

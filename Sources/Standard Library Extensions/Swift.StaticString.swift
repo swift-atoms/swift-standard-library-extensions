@@ -1,3 +1,3 @@
-extension StaticString {
+extension Swift.StaticString {
 
 }

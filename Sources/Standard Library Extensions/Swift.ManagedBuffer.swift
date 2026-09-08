@@ -1,11 +1,11 @@
-extension ManagedBuffer {
+extension Swift.ManagedBuffer {
 
     @inlinable
     @_disfavoredOverload
     public func withUnsafeMutablePointerToElements<R, E: Swift.Error>(
         _ body: (UnsafeMutablePointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        let result: Result<R, E> = unsafe self.withUnsafeMutablePointerToElements { pointer in
+        let result: Swift.Result<R, E> = unsafe self.withUnsafeMutablePointerToElements { pointer in
             do throws(E) {
                 return .success(try unsafe body(pointer))
             } catch {
@@ -20,7 +20,7 @@ extension ManagedBuffer {
     public func withUnsafeMutablePointerToHeader<R, E: Swift.Error>(
         _ body: (UnsafeMutablePointer<Header>) throws(E) -> R
     ) throws(E) -> R {
-        let result: Result<R, E> = unsafe self.withUnsafeMutablePointerToHeader { pointer in
+        let result: Swift.Result<R, E> = unsafe self.withUnsafeMutablePointerToHeader { pointer in
             do throws(E) {
                 return .success(try unsafe body(pointer))
             } catch {
@@ -35,7 +35,7 @@ extension ManagedBuffer {
     public func withUnsafeMutablePointers<R, E: Swift.Error>(
         _ body: (UnsafeMutablePointer<Header>, UnsafeMutablePointer<Element>) throws(E) -> R
     ) throws(E) -> R {
-        let result: Result<R, E> = unsafe self.withUnsafeMutablePointers { header, elements in
+        let result: Swift.Result<R, E> = unsafe self.withUnsafeMutablePointers { header, elements in
             do throws(E) {
                 return .success(try unsafe body(header, elements))
             } catch {
