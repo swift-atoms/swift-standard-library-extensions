@@ -78,6 +78,17 @@ extension Swift.Optional {
 
 extension Swift.Optional {
 
+    /// Whether a value is present. Setting it `false` clears the value; setting it `true` is a
+    /// no-op, so a binding reached through this key path can drive a presentation.
+    @inlinable
+    public var isPresent: Bool {
+        get { self != nil }
+        set { if !newValue { self = nil } }
+    }
+}
+
+extension Swift.Optional {
+
     @inlinable
     public func unwrap<E: Swift.Error>(or error: E) throws(E) -> Wrapped {
         guard let value = self else { throw error }
