@@ -74,3 +74,28 @@ extension Swift.StringProtocol {
         String(Self.trimming(self, of: characterSet))
     }
 }
+
+extension Swift.StringProtocol {
+
+    /// What follows the prefix, or nil when the string does not start with it.
+    @inlinable
+    public static func removing(_ string: Self, prefix: some StringProtocol) -> SubSequence? {
+        string.hasPrefix(prefix) ? string.dropFirst(prefix.count) : nil
+    }
+
+    @inlinable
+    public func removing(prefix: some StringProtocol) -> SubSequence? {
+        Self.removing(self, prefix: prefix)
+    }
+
+    /// The string with its first character upper-cased and the rest as it was.
+    @inlinable
+    public static func uppercasingFirst(_ string: Self) -> String {
+        string.prefix(1).uppercased() + string.dropFirst()
+    }
+
+    @inlinable
+    public var uppercasingFirst: String {
+        Self.uppercasingFirst(self)
+    }
+}

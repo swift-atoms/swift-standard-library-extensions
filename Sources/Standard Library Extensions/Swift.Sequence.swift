@@ -136,3 +136,17 @@ extension Swift.Sequence where Element: BinaryFloatingPoint {
         return sum / count
     }
 }
+
+extension Swift.Sequence where Element: Identifiable {
+
+    /// The first element with the identifier.
+    @inlinable
+    public static func first(_ sequence: Self, id: Element.ID) -> Element? {
+        sequence.first { $0.id == id }
+    }
+
+    @inlinable
+    public func first(id: Element.ID) -> Element? {
+        Self.first(self, id: id)
+    }
+}
