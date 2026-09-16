@@ -15,26 +15,22 @@ extension Swift.Collection {
     }
 
     @inlinable
-    public func chunked(into size: Int) -> [[Element]] {
-        guard size > 0 else { return [] }
-        var chunks: [[Element]] = []
-        var currentChunk: [Element] = []
-        currentChunk.reserveCapacity(size)
-
-        for element in self {
-            currentChunk.append(element)
-            if currentChunk.count == size {
-                chunks.append(currentChunk)
-                currentChunk = []
-                currentChunk.reserveCapacity(size)
-            }
+    public func chunks<Chunks: RangeReplaceableCollection>(of size: Int) -> Chunks
+    where Chunks.Element == SubSequence {
+        var chunks = Chunks()
+        guard size > 0 else { return chunks }
+        var start = startIndex
+        while start != endIndex {
+            let end = index(start, offsetBy: size, limitedBy: endIndex) ?? endIndex
+            chunks.append(self[start..<end])
+            start = end
         }
-
-        if !currentChunk.isEmpty {
-            chunks.append(currentChunk)
-        }
-
         return chunks
+    }
+
+    @inlinable
+    public func chunked(into size: Int) -> [[Element]] {
+        (chunks(of: size) as [SubSequence]).map(Array.init)
     }
 
     @inlinable

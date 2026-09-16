@@ -94,3 +94,46 @@ struct `Collection Safe Subscript` {
         #expect(Bool(true))
     }
 }
+
+@Suite
+struct `Collection Chunks` {
+
+    @Test
+    func `Chunks slice the collection without copying elements`() {
+        let array = [1, 2, 3, 4, 5]
+        let chunks: [ArraySlice<Int>] = array.chunks(of: 2)
+        #expect(chunks.map(Array.init) == [[1, 2], [3, 4], [5]])
+        #expect(chunks[1].startIndex == 2)
+    }
+
+    @Test
+    func `Chunks accept any range-replaceable output`() {
+        let string = "abcdefg"
+        let chunks: ContiguousArray<Substring> = string.chunks(of: 3)
+        #expect(chunks.map(String.init) == ["abc", "def", "g"])
+    }
+
+    @Test
+    func `Chunks of an exact multiple have no remainder`() {
+        let chunks: [ArraySlice<Int>] = [1, 2, 3, 4].chunks(of: 2)
+        #expect(chunks.count == 2)
+    }
+
+    @Test
+    func `Chunks of an empty collection are empty`() {
+        let chunks: [ArraySlice<Int>] = [Int]().chunks(of: 3)
+        #expect(chunks.isEmpty)
+    }
+
+    @Test
+    func `Chunks of a non-positive size are empty`() {
+        let chunks: [ArraySlice<Int>] = [1, 2, 3].chunks(of: 0)
+        #expect(chunks.isEmpty)
+    }
+
+    @Test
+    func `Chunked copies the chunks into arrays`() {
+        #expect([1, 2, 3, 4, 5].chunked(into: 2) == [[1, 2], [3, 4], [5]])
+        #expect([1, 2, 3].chunked(into: 0).isEmpty)
+    }
+}
