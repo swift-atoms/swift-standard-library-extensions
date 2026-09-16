@@ -30,7 +30,7 @@ extension Swift.Collection {
 
     @inlinable
     public func chunked(into size: Int) -> [[Element]] {
-        (chunks(of: size) as [SubSequence]).map(Array.init)
+        (chunks(of: size) as [SubSequence]).map { Array($0) }
     }
 
     @inlinable
