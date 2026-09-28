@@ -98,4 +98,26 @@ extension Swift.StringProtocol {
     public var uppercasingFirst: String {
         Self.uppercasingFirst(self)
     }
+
+    @inlinable
+    public static func lowercasingFirst(_ string: Self) -> String {
+        string.prefix(1).lowercased() + string.dropFirst()
+    }
+
+    @inlinable
+    public var lowercasingFirst: String {
+        Self.lowercasingFirst(self)
+    }
+
+    @inlinable
+    public static func lowercasingLeadingUppercase(_ string: Self) -> String {
+        let leading = string.prefix(while: \.isUppercase).count
+        let count = leading > 1 && leading < string.count ? leading - 1 : leading
+        return string.prefix(count).lowercased() + string.dropFirst(count)
+    }
+
+    @inlinable
+    public var lowercasingLeadingUppercase: String {
+        Self.lowercasingLeadingUppercase(self)
+    }
 }

@@ -22,4 +22,21 @@ struct `StringProtocol Prefix and First Letter` {
         #expect("éa".uppercasingFirst == "Éa")
         #expect(Substring("ab cD").uppercasingFirst == "Ab cD")
     }
+
+    @Test
+    func `lowercasingFirst lowers only the first character`() {
+        #expect("Reminder".lowercasingFirst == "reminder")
+        #expect("URLRequest".lowercasingFirst == "uRLRequest")
+        #expect("".lowercasingFirst == "")
+    }
+
+    @Test
+    func `lowercasingLeadingUppercase lowers a leading acronym but keeps the next word's capital`() {
+        #expect("Reminder".lowercasingLeadingUppercase == "reminder")
+        #expect("URLRequest".lowercasingLeadingUppercase == "urlRequest")
+        #expect("URL".lowercasingLeadingUppercase == "url")
+        #expect("iPhone".lowercasingLeadingUppercase == "iPhone")
+        #expect(String.lowercasingLeadingUppercase("RemindersList") == "remindersList")
+        #expect("".lowercasingLeadingUppercase == "")
+    }
 }
