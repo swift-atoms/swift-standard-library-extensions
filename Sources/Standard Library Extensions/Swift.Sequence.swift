@@ -139,7 +139,6 @@ extension Swift.Sequence where Element: BinaryFloatingPoint {
 
 extension Swift.Sequence where Element: Identifiable {
 
-    /// The first element with the identifier.
     @inlinable
     public static func first(_ sequence: Self, id: Element.ID) -> Element? {
         sequence.first { $0.id == id }

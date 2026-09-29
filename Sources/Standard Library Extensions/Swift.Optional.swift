@@ -78,8 +78,6 @@ extension Swift.Optional {
 
 extension Swift.Optional {
 
-    /// Whether a value is present. Setting it `false` clears the value; setting it `true` is a
-    /// no-op, so a binding reached through this key path can drive a presentation.
     @inlinable
     public var isPresent: Bool {
         get { self != nil }

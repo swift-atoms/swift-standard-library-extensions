@@ -1,5 +1,4 @@
 extension AsyncSequence where Self: Sendable, Element: Sendable {
-    /// Preserve values, errors and producer cancellation while erasing the sequence type.
     public func eraseToThrowingStream() -> AsyncThrowingStream<Element, any Error> {
         AsyncThrowingStream { continuation in
             let task = Task {

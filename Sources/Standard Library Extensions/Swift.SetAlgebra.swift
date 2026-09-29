@@ -1,6 +1,5 @@
 extension Swift.SetAlgebra {
 
-    /// The set without the member if it was present, with it if it was absent.
     @inlinable
     public static func toggling(_ set: Self, _ member: Element) -> Self {
         var result = set
@@ -13,7 +12,6 @@ extension Swift.SetAlgebra {
         self = Self.toggling(self, member)
     }
 
-    /// The set with `member` swapped for `replacement` when it is present; unchanged otherwise.
     @inlinable
     public static func replacing(_ set: Self, _ member: Element, with replacement: Element) -> Self {
         var result = set
