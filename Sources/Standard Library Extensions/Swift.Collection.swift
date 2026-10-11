@@ -1,12 +1,12 @@
 extension Swift.Collection {
 
     @inlinable
-    public subscript(safe index: Index) -> Element? {
+    public func element(at index: Index) -> Element? {
         indices.contains(index) ? self[index] : nil
     }
 
     @inlinable
-    public subscript(safe range: Range<Index>) -> SubSequence? {
+    public func elements(in range: Range<Index>) -> SubSequence? {
         guard range.lowerBound >= startIndex,
             range.upperBound <= endIndex,
             range.lowerBound <= range.upperBound

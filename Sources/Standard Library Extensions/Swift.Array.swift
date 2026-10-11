@@ -15,7 +15,7 @@ extension Swift.Array {
     }
 
     @inlinable
-    public subscript(safe range: Range<Int>) -> ArraySlice<Element>? {
+    public func elements(in range: Range<Int>) -> ArraySlice<Element>? {
         guard range.lowerBound >= 0,
             range.upperBound <= count,
             range.lowerBound <= range.upperBound
@@ -24,7 +24,7 @@ extension Swift.Array {
     }
 
     @inlinable
-    public subscript(safe range: ClosedRange<Int>) -> ArraySlice<Element>? {
+    public func elements(in range: ClosedRange<Int>) -> ArraySlice<Element>? {
         guard range.lowerBound >= 0,
             range.upperBound < count,
             range.lowerBound <= range.upperBound
