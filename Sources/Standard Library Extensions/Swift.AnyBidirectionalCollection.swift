@@ -1,5 +1,5 @@
 #if !hasFeature(Embedded)
-extension Swift.AnyBidirectionalCollection {
+    extension Swift.AnyBidirectionalCollection {
 
     }
 #endif

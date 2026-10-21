@@ -1,5 +1,5 @@
 #if !hasFeature(Embedded)
-extension Swift.AnyCollection {
+    extension Swift.AnyCollection {
 
     }
 #endif

@@ -1,5 +1,5 @@
 #if !hasFeature(Embedded)
-extension Swift.Actor {
+    extension Swift.Actor {
 
         @inlinable
         public func run<R, Failure: Swift.Error>(
@@ -17,9 +17,8 @@ extension Swift.Actor {
     }
 #endif
 
-
 #if !hasFeature(Embedded)
-extension Swift.Actor {
+    extension Swift.Actor {
 
         @inlinable
         public func run<R: ~Copyable, Failure: Swift.Error>(

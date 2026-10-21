@@ -1,5 +1,5 @@
 #if !hasFeature(Embedded)
-extension Swift.CommandLine {
+    extension Swift.CommandLine {
 
     }
 #endif

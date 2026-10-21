@@ -9,8 +9,7 @@ extension Swift.Sequence where Element: AdditiveArithmetic {
 extension Swift.Sequence {
 
     @inlinable
-    public func count<E: Swift.Error>(where predicate: (Element) throws(E) -> Bool) throws(E) -> Int
-    {
+    public func count<E: Swift.Error>(where predicate: (Element) throws(E) -> Bool) throws(E) -> Int {
 
         var count = 0
         for element in self {

@@ -1,5 +1,5 @@
 #if !hasFeature(Embedded)
-extension Swift.AnyRandomAccessCollection {
+    extension Swift.AnyRandomAccessCollection {
 
     }
 #endif

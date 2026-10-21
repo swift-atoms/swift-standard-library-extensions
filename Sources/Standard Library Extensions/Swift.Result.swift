@@ -1,5 +1,5 @@
 extension Swift.Result where Success: Copyable {
-    
+
     @inlinable
     public func get() throws(Failure) -> Success {
         switch self {
@@ -7,7 +7,7 @@ extension Swift.Result where Success: Copyable {
         case .failure(let error): throw error
         }
     }
-    
+
     @inlinable
     public func map<NewSuccess>(
         _ transform: (Success) -> NewSuccess
@@ -17,7 +17,7 @@ extension Swift.Result where Success: Copyable {
         case .failure(let error): .failure(error)
         }
     }
-    
+
     @inlinable
     public func flatMap<NewSuccess>(
         _ transform: (Success) -> Result<NewSuccess, Failure>
@@ -27,7 +27,7 @@ extension Swift.Result where Success: Copyable {
         case .failure(let error): .failure(error)
         }
     }
-    
+
     @inlinable
     public func mapError<NewFailure: Swift.Error>(
         _ transform: (Failure) -> NewFailure
@@ -37,7 +37,7 @@ extension Swift.Result where Success: Copyable {
         case .failure(let error): .failure(transform(error))
         }
     }
-    
+
     @inlinable
     public func flatMapError<NewFailure: Swift.Error>(
         _ transform: (Failure) -> Result<Success, NewFailure>
@@ -47,19 +47,19 @@ extension Swift.Result where Success: Copyable {
         case .failure(let error): transform(error)
         }
     }
-    
+
     @inlinable
     public var success: Success? {
         guard case .success(let value) = self else { return nil }
         return value
     }
-    
+
     @inlinable
     public var failure: Failure? {
         guard case .failure(let error) = self else { return nil }
         return error
     }
-    
+
     @inlinable
     public func zip<OtherSuccess>(
         _ other: Result<OtherSuccess, Failure>
@@ -67,15 +67,15 @@ extension Swift.Result where Success: Copyable {
         switch (self, other) {
         case (.success(let a), .success(let b)):
             return .success((a, b))
-            
+
         case (.failure(let error), _):
             return .failure(error)
-            
+
         case (_, .failure(let error)):
             return .failure(error)
         }
     }
-    
+
     @inlinable
     public func zip<OtherSuccess, Combined>(
         _ other: Result<OtherSuccess, Failure>,
@@ -86,7 +86,7 @@ extension Swift.Result where Success: Copyable {
 }
 
 extension Swift.Result where Success: Copyable {
-    
+
     @inlinable
     public init(catching body: () throws(Failure) -> Success) {
         do throws(Failure) {
@@ -98,46 +98,46 @@ extension Swift.Result where Success: Copyable {
 }
 
 extension Swift.Result where Success: Copyable {
-    
+
     public enum Builder {
-        
+
         @resultBuilder
         public enum First {
-            
+
             @inlinable
             public static func buildExpression(_ expression: Success) -> Result<Success, Failure> {
                 .success(expression)
             }
-            
+
             @inlinable
             public static func buildExpression(
                 _ expression: Result<Success, Failure>
             ) -> Result<Success, Failure> {
                 expression
             }
-            
+
             @inlinable
             public static func buildPartialBlock(
                 first: Result<Success, Failure>
             ) -> Result<Success, Failure> {
                 first
             }
-            
+
             @inlinable
             public static func buildPartialBlock(
                 first: Result<Success, Failure>?
             ) -> Result<Success, Failure>? {
                 first
             }
-            
+
             @inlinable
             public static func buildPartialBlock(first: Void) -> Result<Success, Failure>? {
                 nil
             }
-            
+
             @inlinable
             public static func buildPartialBlock(first: Never) -> Result<Success, Failure> {}
-            
+
             @inlinable
             public static func buildPartialBlock(
                 accumulated: Result<Success, Failure>,
@@ -146,12 +146,12 @@ extension Swift.Result where Success: Copyable {
                 switch accumulated {
                 case .success:
                     accumulated
-                    
+
                 case .failure:
                     next
                 }
             }
-            
+
             @inlinable
             public static func buildPartialBlock(
                 accumulated: Result<Success, Failure>,
@@ -160,33 +160,33 @@ extension Swift.Result where Success: Copyable {
                 switch accumulated {
                 case .success:
                     accumulated
-                    
+
                 case .failure:
                     next ?? accumulated
                 }
             }
-            
+
             @inlinable
             public static func buildOptional(
                 _ component: Result<Success, Failure>?
             ) -> Result<Success, Failure>? {
                 component
             }
-            
+
             @inlinable
             public static func buildEither(
                 first: Result<Success, Failure>
             ) -> Result<Success, Failure> {
                 first
             }
-            
+
             @inlinable
             public static func buildEither(
                 second: Result<Success, Failure>
             ) -> Result<Success, Failure> {
                 second
             }
-            
+
             @inlinable
             public static func buildArray(
                 _ components: [Result<Success, Failure>]
@@ -196,14 +196,14 @@ extension Swift.Result where Success: Copyable {
                     switch component {
                     case .success:
                         return component
-                        
+
                     case .failure:
                         lastFailure = component
                     }
                 }
                 return lastFailure
             }
-            
+
             @inlinable
             public static func buildLimitedAvailability(
                 _ component: Result<Success, Failure>
@@ -211,38 +211,37 @@ extension Swift.Result where Success: Copyable {
                 component
             }
         }
-        
+
         @resultBuilder
         public enum All {
-            
+
             @inlinable
-            public static func buildExpression(_ expression: Success) -> Result<[Success], Failure>
-            {
+            public static func buildExpression(_ expression: Success) -> Result<[Success], Failure> {
                 .success([expression])
             }
-            
+
             @inlinable
             public static func buildExpression(
                 _ expression: Result<Success, Failure>
             ) -> Result<[Success], Failure> {
                 expression.map { [$0] }
             }
-            
+
             @inlinable
             public static func buildPartialBlock(
                 first: Result<[Success], Failure>
             ) -> Result<[Success], Failure> {
                 first
             }
-            
+
             @inlinable
             public static func buildPartialBlock(first: Void) -> Result<[Success], Failure> {
                 .success([])
             }
-            
+
             @inlinable
             public static func buildPartialBlock(first: Never) -> Result<[Success], Failure> {}
-            
+
             @inlinable
             public static func buildPartialBlock(
                 accumulated: Result<[Success], Failure>,
@@ -250,42 +249,42 @@ extension Swift.Result where Success: Copyable {
             ) -> Result<[Success], Failure> {
                 switch (accumulated, next) {
                 case (.success(let accValues), .success(let nextValues)):
-                        .success(accValues + nextValues)
-                    
+                    .success(accValues + nextValues)
+
                 case (.failure(let error), _):
-                        .failure(error)
-                    
+                    .failure(error)
+
                 case (_, .failure(let error)):
-                        .failure(error)
+                    .failure(error)
                 }
             }
-            
+
             @inlinable
             public static func buildBlock() -> Result<[Success], Failure> {
                 .success([])
             }
-            
+
             @inlinable
             public static func buildOptional(
                 _ component: Result<[Success], Failure>?
             ) -> Result<[Success], Failure> {
                 component ?? .success([])
             }
-            
+
             @inlinable
             public static func buildEither(
                 first: Result<[Success], Failure>
             ) -> Result<[Success], Failure> {
                 first
             }
-            
+
             @inlinable
             public static func buildEither(
                 second: Result<[Success], Failure>
             ) -> Result<[Success], Failure> {
                 second
             }
-            
+
             @inlinable
             public static func buildArray(
                 _ components: [Result<[Success], Failure>]
@@ -295,14 +294,14 @@ extension Swift.Result where Success: Copyable {
                     switch component {
                     case .success(let values):
                         collected.append(contentsOf: values)
-                        
+
                     case .failure(let error):
                         return .failure(error)
                     }
                 }
                 return .success(collected)
             }
-            
+
             @inlinable
             public static func buildLimitedAvailability(
                 _ component: Result<[Success], Failure>
@@ -314,14 +313,14 @@ extension Swift.Result where Success: Copyable {
 }
 
 extension Swift.Result where Success: Copyable {
-    
+
     @inlinable
     public static func first(
         @Builder.First _ builder: () -> Result<Success, Failure>
     ) -> Result<Success, Failure> {
         builder()
     }
-    
+
     @inlinable
     @_disfavoredOverload
     public static func first(
@@ -329,7 +328,7 @@ extension Swift.Result where Success: Copyable {
     ) -> Result<Success, Failure>? {
         builder()
     }
-    
+
     @inlinable
     public static func all(
         @Builder.All _ builder: () -> Result<[Success], Failure>
