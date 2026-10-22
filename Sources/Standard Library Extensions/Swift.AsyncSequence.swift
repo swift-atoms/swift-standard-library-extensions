@@ -1,3 +1,5 @@
+import _Concurrency
+
 extension AsyncSequence where Self: Sendable, Element: Sendable {
     public func eraseToThrowingStream() -> AsyncThrowingStream<Element, any Error> {
         AsyncThrowingStream { continuation in
