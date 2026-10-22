@@ -2,7 +2,24 @@ extension Swift.MutableCollection where Index == Int {
 
     @inlinable
     public mutating func move(offsets: some Sequence<Int>, to destination: Int) {
-        moveSubranges(RangeSet(offsets, within: self), to: destination)
+        precondition(destination >= startIndex && destination <= endIndex)
+
+        let ranges = RangeSet(offsets, within: self)
+        var result: [Element] = []
+        result.reserveCapacity(count)
+
+        for index in indices where index < destination && !ranges.contains(index) {
+            result.append(self[index])
+        }
+        for index in indices where ranges.contains(index) {
+            result.append(self[index])
+        }
+        for index in indices where index >= destination && !ranges.contains(index) {
+            result.append(self[index])
+        }
+        for (index, element) in zip(indices, result) {
+            self[index] = element
+        }
     }
 }
 
