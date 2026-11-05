@@ -16,7 +16,7 @@ Use this package when code needs a convenience the Swift standard library leaves
 - `range(of:)` compares UTF-8 bytes. It is case-sensitive, does not apply canonical equivalence (a precomposed `é` does not match `e` followed by U+0301), and returns the first match. An empty needle matches the empty range at `startIndex`.
 - `Swift.Range` `overlap(_:)` and `clamped(to:)` return `nil` when the intersection is empty, so ranges that only touch give `nil`. On `Swift.ClosedRange`, ranges that touch give a single point. `split(at:)` returns `nil` unless the point lies strictly between the bounds.
 - `power(_:)` returns `0` for a negative exponent, not the reciprocal. `rounded(to:)` returns the value unchanged for a negative number of places and otherwise rounds half away from zero.
-- `max(count:)` returns the largest elements in descending order, and `min(count:)` the smallest in ascending order. Both return at most `count` elements. `mean()` returns `nil` for an empty sequence. On integers it divides with truncation.
+- `max(count:)` returns the largest elements in descending order, and `min(count:)` the smallest in ascending order. Both return at most `count` elements. `mean()` returns `nil` for an empty sequence. On integers it divides with truncation, and it traps when the sum or the element count does not fit the element type.
 - `uniqued()` keeps the first occurrence of each element, in order.
 - If two values are equal, `inverted()` keeps one of their keys, chosen by dictionary iteration order. The same goes for `mapKeys(_:)` and `compactMapKeys(_:)` when two keys map to the same new key.
 - `replace(_:with:)` inserts the replacement only if the member was present. `toggle(_:)` removes a present member and inserts an absent one.
