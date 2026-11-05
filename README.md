@@ -21,7 +21,7 @@ Use this package when code needs a convenience the Swift standard library leaves
 - If two values are equal, `inverted()` keeps one of their keys, chosen by dictionary iteration order. The same goes for `mapKeys(_:)` and `compactMapKeys(_:)` when two keys map to the same new key.
 - `replace(_:with:)` inserts the replacement only if the member was present. `toggle(_:)` removes a present member and inserts an absent one.
 - Setting `isPresent` to `false` clears the optional. Setting it to `true` does nothing.
-- `lowercasingLeadingUppercase` lowercases a leading run of capitals. When more text follows the run, its last capital stays, because that capital starts the next word (`URLRequest` becomes `urlRequest`).
+- `lowercasingLeadingUppercase` lowercases a leading run of capitals. When the run has two or more capitals and more text follows it, its last capital stays, because that capital starts the next word (`URLRequest` becomes `urlRequest`). A single leading capital is lowercased (`Request` becomes `request`).
 - `Swift.Set<String>.Swift.escape(_:)` adds backticks only to words in `Swift.Set<String>.Swift.keywords`.
 - `Swift.Actor.run` with a synchronous body runs it as one isolated step, so no other work on the actor runs in between. The async overload can interleave at every `await`.
 - `eraseToThrowingStream()` runs the iteration in a new unstructured `Task`. When the stream terminates, that task is cancelled. If the loop sees cancellation between elements, it finishes the stream without throwing. Any error the base sequence throws is passed on to the stream.
