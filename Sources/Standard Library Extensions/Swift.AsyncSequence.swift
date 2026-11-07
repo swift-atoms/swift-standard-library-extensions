@@ -1,7 +1,7 @@
 public import _Concurrency
 
 extension AsyncSequence where Self: Sendable, Element: Sendable {
-    public func eraseToThrowingStream() -> AsyncThrowingStream<Element, any Error> {
+    public func eraseToThrowingStream() -> AsyncThrowingStream<Element, any Swift.Error> {
         AsyncThrowingStream { continuation in
             let task = Task {
                 do {

@@ -117,7 +117,7 @@ struct `Comparable Clamping` {
 
         let range = 0...10
 
-        for value in 0...10 {
+        (0...10).forEach { value in
             #expect(value.clamped(to: range) == value)
         }
     }
