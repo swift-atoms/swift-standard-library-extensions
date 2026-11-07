@@ -4,7 +4,9 @@ import Testing
 
 @Suite
 struct `Array.Builder Tests` {
+}
 
+extension `Array.Builder Tests` {
     @Suite
     struct `Expression Building` {
 

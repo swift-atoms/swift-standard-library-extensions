@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `LazyDropWhileSequence - Extensions` {
+enum `Swift.LazyDropWhileSequence Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.LazyDropWhileSequence Tests` {
+    @Suite
+    struct `LazyDropWhileSequence - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

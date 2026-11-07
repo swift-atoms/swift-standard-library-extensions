@@ -4,7 +4,9 @@ import Testing
 
 @Suite
 struct `String.Builder Tests` {
+}
 
+extension `String.Builder Tests` {
     @Suite
     struct `Expression Building` {
 

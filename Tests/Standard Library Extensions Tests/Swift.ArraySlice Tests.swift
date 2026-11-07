@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `ArraySlice - Extensions` {
+enum `Swift.ArraySlice Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.ArraySlice Tests` {
+    @Suite
+    struct `ArraySlice - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

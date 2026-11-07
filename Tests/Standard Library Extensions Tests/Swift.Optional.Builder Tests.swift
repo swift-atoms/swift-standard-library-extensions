@@ -4,7 +4,9 @@ import Testing
 
 @Suite
 struct `Optional.Builder Tests` {
+}
 
+extension `Optional.Builder Tests` {
     @Suite
     struct `Basic Coalescing` {
 

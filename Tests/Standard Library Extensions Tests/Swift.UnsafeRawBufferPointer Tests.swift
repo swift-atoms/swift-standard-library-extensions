@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `UnsafeRawBufferPointer - Extensions` {
+enum `Swift.UnsafeRawBufferPointer Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.UnsafeRawBufferPointer Tests` {
+    @Suite
+    struct `UnsafeRawBufferPointer - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

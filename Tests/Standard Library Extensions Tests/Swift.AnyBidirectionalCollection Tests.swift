@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `AnyBidirectionalCollection - Extensions` {
+enum `Swift.AnyBidirectionalCollection Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.AnyBidirectionalCollection Tests` {
+    @Suite
+    struct `AnyBidirectionalCollection - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

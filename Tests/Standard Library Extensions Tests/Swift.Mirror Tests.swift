@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `Mirror - Extensions` {
+enum `Swift.Mirror Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.Mirror Tests` {
+    @Suite
+    struct `Mirror - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

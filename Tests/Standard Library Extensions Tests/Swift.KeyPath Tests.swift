@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `KeyPath - Extensions` {
+enum `Swift.KeyPath Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.KeyPath Tests` {
+    @Suite
+    struct `KeyPath - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

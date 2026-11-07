@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `LazyPrefixWhileSequence - Extensions` {
+enum `Swift.LazyPrefixWhileSequence Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.LazyPrefixWhileSequence Tests` {
+    @Suite
+    struct `LazyPrefixWhileSequence - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

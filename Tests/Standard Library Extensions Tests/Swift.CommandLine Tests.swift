@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `CommandLine - Extensions` {
+enum `Swift.CommandLine Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.CommandLine Tests` {
+    @Suite
+    struct `CommandLine - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

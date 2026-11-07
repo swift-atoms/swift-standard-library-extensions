@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `LazySequence - Extensions` {
+enum `Swift.LazySequence Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.LazySequence Tests` {
+    @Suite
+    struct `LazySequence - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

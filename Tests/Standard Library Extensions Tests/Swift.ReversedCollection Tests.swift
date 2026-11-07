@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `ReversedCollection - Extensions` {
+enum `Swift.ReversedCollection Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.ReversedCollection Tests` {
+    @Suite
+    struct `ReversedCollection - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

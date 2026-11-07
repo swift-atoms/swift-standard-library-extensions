@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `Bool - Extensions` {
+enum `Swift.Bool Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.Bool Tests` {
+    @Suite
+    struct `Bool - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `ObjectIdentifier - Extensions` {
+enum `Swift.ObjectIdentifier Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.ObjectIdentifier Tests` {
+    @Suite
+    struct `ObjectIdentifier - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

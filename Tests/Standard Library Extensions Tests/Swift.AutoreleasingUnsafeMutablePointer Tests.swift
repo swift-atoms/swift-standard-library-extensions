@@ -3,12 +3,16 @@ import Testing
 @testable import Standard_Library_Extensions
 
 #if canImport(ObjectiveC)
-    @Suite
-    struct `AutoreleasingUnsafeMutablePointer - Extensions` {
+enum `Swift.AutoreleasingUnsafeMutablePointer Tests` {}
 
-        @Test
-        func `Placeholder test`() {
+extension `Swift.AutoreleasingUnsafeMutablePointer Tests` {
+        @Suite
+        struct `AutoreleasingUnsafeMutablePointer - Extensions` {
 
+            @Test
+            func `Placeholder test`() {
+
+            }
         }
-    }
+}
 #endif

@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `AnySequence - Extensions` {
+enum `Swift.AnySequence Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.AnySequence Tests` {
+    @Suite
+    struct `AnySequence - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

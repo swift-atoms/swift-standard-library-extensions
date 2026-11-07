@@ -4,7 +4,9 @@ import Testing
 
 @Suite
 struct `ArraySlice.Builder Tests` {
+}
 
+extension `ArraySlice.Builder Tests` {
     @Suite
     struct `Basic Construction` {
 

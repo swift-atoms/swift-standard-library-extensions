@@ -4,7 +4,9 @@ import Testing
 
 @Suite
 struct `Substring.Builder Tests` {
+}
 
+extension `Substring.Builder Tests` {
     @Suite
     struct `Basic Construction` {
 

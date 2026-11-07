@@ -63,224 +63,236 @@ actor ResourceFactory {
     }
 }
 
-@Suite
-struct `Actor - run sync` {
+enum `Swift.Actor Tests` {}
 
-    @Test
-    func `Synchronous multi-step access`() async {
-        let counter = Counter()
+extension `Swift.Actor Tests` {
+    @Suite
+    struct `Actor - run sync` {
 
-        await counter.run { counter in
-            counter.increment()
-            counter.increment()
-            counter.increment()
-            #expect(counter.value() == 3)
-        }
-    }
+        @Test
+        func `Synchronous multi-step access`() async {
+            let counter = Counter()
 
-    @Test
-    func `Returns Sendable value across isolation boundary`() async {
-        let counter = Counter()
-
-        let result = await counter.run { counter in
-            counter.increment()
-            return counter.value()
-        }
-
-        #expect(result == 1)
-    }
-
-    @Test
-    func `Propagates typed error`() async {
-        let counter = Counter()
-
-        await #expect(throws: Counter.Failure.belowZero) {
-            try await counter.run { counter in
-                try counter.decrement()
-            }
-        }
-    }
-
-    @Test
-    func `No interleaving during run`() async {
-        let counter = Counter()
-
-        await counter.run { counter in
-            for _ in 0..<100 {
+            await counter.run { counter in
                 counter.increment()
+                counter.increment()
+                counter.increment()
+                #expect(counter.value() == 3)
             }
         }
 
-        await withTaskGroup(of: Void.self) { group in
-            for _ in 0..<10 {
-                group.addTask {
-                    await counter.run { counter in
-                        let before = counter.value()
-                        counter.increment()
-                        let after = counter.value()
-                        #expect(after - before == 1)
+        @Test
+        func `Returns Sendable value across isolation boundary`() async {
+            let counter = Counter()
+
+            let result = await counter.run { counter in
+                counter.increment()
+                return counter.value()
+            }
+
+            #expect(result == 1)
+        }
+
+        @Test
+        func `Propagates typed error`() async {
+            let counter = Counter()
+
+            await #expect(throws: Counter.Failure.belowZero) {
+                try await counter.run { counter in
+                    try counter.decrement()
+                }
+            }
+        }
+
+        @Test
+        func `No interleaving during run`() async {
+            let counter = Counter()
+
+            await counter.run { counter in
+                for _ in 0..<100 {
+                    counter.increment()
+                }
+            }
+
+            await withTaskGroup(of: Void.self) { group in
+                for _ in 0..<10 {
+                    group.addTask {
+                        await counter.run { counter in
+                            let before = counter.value()
+                            counter.increment()
+                            let after = counter.value()
+                            #expect(after - before == 1)
+                        }
+                    }
+                }
+            }
+
+            #expect(await counter.value() == 110)
+        }
+    }
+}
+
+extension `Swift.Actor Tests` {
+    @Suite
+    struct `Actor - run async` {
+
+        @Test
+        func `Cross-actor call inside run`() async {
+            let counter = Counter()
+            let observer = Observer()
+
+            await counter.run { counter in
+                counter.increment()
+                counter.increment()
+
+                let observed = await observer.read(counter)
+                #expect(observed == 2)
+            }
+        }
+
+        @Test
+        func `Returns value from async closure`() async {
+            let counter = Counter()
+            let observer = Observer()
+
+            let result = await counter.run { counter in
+                counter.increment()
+                return await observer.read(counter)
+            }
+
+            #expect(result == 1)
+        }
+
+        @Test
+        func `Propagates typed error from async closure`() async {
+            let counter = Counter()
+            let observer = Observer()
+
+            await #expect(throws: Counter.Failure.belowZero) {
+                try await counter.run { counter in
+
+                    _ = await observer.read(counter)
+                    try counter.decrement()
+                }
+            }
+        }
+    }
+}
+
+extension `Swift.Actor Tests` {
+    @Suite
+    struct `Actor - sending return` {
+
+        @Test
+        func `Non-Sendable value constructed inline`() async {
+            let holder = Holder()
+
+            let box = await holder.run { _ in
+                Box(7)
+            }
+
+            #expect(box.value == 7)
+        }
+
+        @Test
+        func `Non-Sendable tuple constructed inline`() async {
+            let holder = Holder()
+
+            let (a, b) = await holder.run { _ in
+                (Box(1), Box(2))
+            }
+
+            #expect(a.value == 1)
+            #expect(b.value == 2)
+        }
+
+        @Test
+        func `Non-Sendable array constructed inline`() async {
+            let holder = Holder()
+
+            let boxes = await holder.run { _ in
+                (0..<5).map { Box($0) }
+            }
+
+            #expect(boxes.count == 5)
+            #expect(boxes[3].value == 3)
+        }
+
+    }
+}
+
+extension `Swift.Actor Tests` {
+    @Suite
+    struct `Actor - noncopyable sync` {
+
+        @Test
+        func `Returns Sendable noncopyable resource`() async {
+            let factory = ResourceFactory()
+
+            let resource = await factory.run { factory in
+                factory.make()
+            }
+
+            #expect(resource.id == 1)
+        }
+
+        @Test
+        func `Returns non-Sendable noncopyable handle`() async {
+            let factory = ResourceFactory()
+
+            let handle = await factory.run { factory in
+                factory.open()
+            }
+
+            #expect(handle.fd == 1)
+        }
+
+        @Test
+        func `Typed throws with noncopyable return`() async {
+            let factory = ResourceFactory()
+
+            await #expect(throws: ResourceFactory.Failure.depleted) {
+
+                for _ in 0..<6 {
+                    _ = try await factory.run { factory in
+                        try factory.makeOrFail()
                     }
                 }
             }
         }
 
-        #expect(await counter.value() == 110)
-    }
-}
+        @Test
+        func `Multi-step producing noncopyable result`() async {
+            let factory = ResourceFactory()
 
-@Suite
-struct `Actor - run async` {
+            let resource = await factory.run { factory in
 
-    @Test
-    func `Cross-actor call inside run`() async {
-        let counter = Counter()
-        let observer = Observer()
+                _ = factory.make()
+                _ = factory.make()
 
-        await counter.run { counter in
-            counter.increment()
-            counter.increment()
-
-            let observed = await observer.read(counter)
-            #expect(observed == 2)
-        }
-    }
-
-    @Test
-    func `Returns value from async closure`() async {
-        let counter = Counter()
-        let observer = Observer()
-
-        let result = await counter.run { counter in
-            counter.increment()
-            return await observer.read(counter)
-        }
-
-        #expect(result == 1)
-    }
-
-    @Test
-    func `Propagates typed error from async closure`() async {
-        let counter = Counter()
-        let observer = Observer()
-
-        await #expect(throws: Counter.Failure.belowZero) {
-            try await counter.run { counter in
-
-                _ = await observer.read(counter)
-                try counter.decrement()
+                return factory.make()
             }
+
+            #expect(resource.id == 3)
         }
     }
 }
 
-@Suite
-struct `Actor - sending return` {
+extension `Swift.Actor Tests` {
+    @Suite
+    struct `Actor - noncopyable async` {
 
-    @Test
-    func `Non-Sendable value constructed inline`() async {
-        let holder = Holder()
+        @Test
+        func `Cross-actor call with noncopyable return`() async {
+            let factory = ResourceFactory()
+            let observer = Observer()
 
-        let box = await holder.run { _ in
-            Box(7)
-        }
-
-        #expect(box.value == 7)
-    }
-
-    @Test
-    func `Non-Sendable tuple constructed inline`() async {
-        let holder = Holder()
-
-        let (a, b) = await holder.run { _ in
-            (Box(1), Box(2))
-        }
-
-        #expect(a.value == 1)
-        #expect(b.value == 2)
-    }
-
-    @Test
-    func `Non-Sendable array constructed inline`() async {
-        let holder = Holder()
-
-        let boxes = await holder.run { _ in
-            (0..<5).map { Box($0) }
-        }
-
-        #expect(boxes.count == 5)
-        #expect(boxes[3].value == 3)
-    }
-
-}
-
-@Suite
-struct `Actor - noncopyable sync` {
-
-    @Test
-    func `Returns Sendable noncopyable resource`() async {
-        let factory = ResourceFactory()
-
-        let resource = await factory.run { factory in
-            factory.make()
-        }
-
-        #expect(resource.id == 1)
-    }
-
-    @Test
-    func `Returns non-Sendable noncopyable handle`() async {
-        let factory = ResourceFactory()
-
-        let handle = await factory.run { factory in
-            factory.open()
-        }
-
-        #expect(handle.fd == 1)
-    }
-
-    @Test
-    func `Typed throws with noncopyable return`() async {
-        let factory = ResourceFactory()
-
-        await #expect(throws: ResourceFactory.Failure.depleted) {
-
-            for _ in 0..<6 {
-                _ = try await factory.run { factory in
-                    try factory.makeOrFail()
-                }
+            let resource = await factory.run { factory in
+                _ = await observer.read(Counter())
+                return factory.make()
             }
+
+            #expect(resource.id == 1)
         }
-    }
-
-    @Test
-    func `Multi-step producing noncopyable result`() async {
-        let factory = ResourceFactory()
-
-        let resource = await factory.run { factory in
-
-            _ = factory.make()
-            _ = factory.make()
-
-            return factory.make()
-        }
-
-        #expect(resource.id == 3)
-    }
-}
-
-@Suite
-struct `Actor - noncopyable async` {
-
-    @Test
-    func `Cross-actor call with noncopyable return`() async {
-        let factory = ResourceFactory()
-        let observer = Observer()
-
-        let resource = await factory.run { factory in
-            _ = await observer.read(Counter())
-            return factory.make()
-        }
-
-        #expect(resource.id == 1)
     }
 }

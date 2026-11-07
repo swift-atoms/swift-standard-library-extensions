@@ -4,7 +4,9 @@ import Testing
 
 @Suite
 struct `Bool.Builder Tests` {
+}
 
+extension `Bool.Builder Tests` {
     @Suite
     struct `Bool.all (AND Semantics)` {
 

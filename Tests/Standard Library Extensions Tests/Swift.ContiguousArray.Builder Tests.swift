@@ -4,7 +4,9 @@ import Testing
 
 @Suite
 struct `ContiguousArray.Builder Tests` {
+}
 
+extension `ContiguousArray.Builder Tests` {
     @Suite
     struct `Basic Construction` {
 

@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `StrideTo - Extensions` {
+enum `Swift.StrideTo Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.StrideTo Tests` {
+    @Suite
+    struct `StrideTo - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

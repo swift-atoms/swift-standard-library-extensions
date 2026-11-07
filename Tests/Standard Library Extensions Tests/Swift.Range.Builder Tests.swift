@@ -4,7 +4,9 @@ import Testing
 
 @Suite
 struct `Range.Builder Tests` {
+}
 
+extension `Range.Builder Tests` {
     @Suite
     struct `Basic Construction` {
 

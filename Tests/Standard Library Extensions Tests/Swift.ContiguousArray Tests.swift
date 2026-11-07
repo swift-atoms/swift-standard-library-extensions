@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `ContiguousArray - Extensions` {
+enum `Swift.ContiguousArray Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.ContiguousArray Tests` {
+    @Suite
+    struct `ContiguousArray - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

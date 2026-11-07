@@ -2,165 +2,169 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `Set - Extensions` {
+enum `Swift.Set Tests` {}
 
-    @Test
-    func `partition splits set correctly`() {
-        let numbers: Set = [1, 2, 3, 4, 5, 6]
-        let (evens, odds) = numbers.partition(where: { $0.isMultiple(of: 2) })
+extension `Swift.Set Tests` {
+    @Suite
+    struct `Set - Extensions` {
 
-        #expect(evens == [2, 4, 6])
-        #expect(odds == [1, 3, 5])
-    }
+        @Test
+        func `partition splits set correctly`() {
+            let numbers: Set = [1, 2, 3, 4, 5, 6]
+            let (evens, odds) = numbers.partition(where: { $0.isMultiple(of: 2) })
 
-    @Test
-    func `partition on empty set returns empty sets`() {
-        let empty: Set<Int> = []
-        let (satisfying, failing) = empty.partition(where: { $0 > 0 })
+            #expect(evens == [2, 4, 6])
+            #expect(odds == [1, 3, 5])
+        }
 
-        #expect(satisfying.isEmpty)
-        #expect(failing.isEmpty)
-    }
+        @Test
+        func `partition on empty set returns empty sets`() {
+            let empty: Set<Int> = []
+            let (satisfying, failing) = empty.partition(where: { $0 > 0 })
 
-    @Test
-    func `partition where all satisfy returns full and empty`() {
-        let numbers: Set = [2, 4, 6, 8]
-        let (evens, odds) = numbers.partition(where: { $0.isMultiple(of: 2) })
+            #expect(satisfying.isEmpty)
+            #expect(failing.isEmpty)
+        }
 
-        #expect(evens == numbers)
-        #expect(odds.isEmpty)
-    }
+        @Test
+        func `partition where all satisfy returns full and empty`() {
+            let numbers: Set = [2, 4, 6, 8]
+            let (evens, odds) = numbers.partition(where: { $0.isMultiple(of: 2) })
 
-    @Test
-    func `partition where none satisfy returns empty and full`() {
-        let numbers: Set = [1, 3, 5, 7]
-        let (evens, odds) = numbers.partition(where: { $0.isMultiple(of: 2) })
+            #expect(evens == numbers)
+            #expect(odds.isEmpty)
+        }
 
-        #expect(evens.isEmpty)
-        #expect(odds == numbers)
-    }
+        @Test
+        func `partition where none satisfy returns empty and full`() {
+            let numbers: Set = [1, 3, 5, 7]
+            let (evens, odds) = numbers.partition(where: { $0.isMultiple(of: 2) })
 
-    @Test
-    func `partition creates disjoint sets`() {
-        let numbers: Set = [1, 2, 3, 4, 5]
-        let (satisfying, failing) = numbers.partition(where: { $0 > 3 })
+            #expect(evens.isEmpty)
+            #expect(odds == numbers)
+        }
 
-        #expect(satisfying.isDisjoint(with: failing))
+        @Test
+        func `partition creates disjoint sets`() {
+            let numbers: Set = [1, 2, 3, 4, 5]
+            let (satisfying, failing) = numbers.partition(where: { $0 > 3 })
 
-        #expect(satisfying.union(failing) == numbers)
-    }
+            #expect(satisfying.isDisjoint(with: failing))
 
-    @Test
-    func `subsets of size 0 returns empty set`() {
-        let set: Set = [1, 2, 3]
-        let result = set.subsets(ofSize: 0)
+            #expect(satisfying.union(failing) == numbers)
+        }
 
-        #expect(result == [[]])
-    }
+        @Test
+        func `subsets of size 0 returns empty set`() {
+            let set: Set = [1, 2, 3]
+            let result = set.subsets(ofSize: 0)
 
-    @Test
-    func `subsets of size equal to count returns original set`() {
-        let set: Set = [1, 2, 3]
-        let result = set.subsets(ofSize: 3)
+            #expect(result == [[]])
+        }
 
-        #expect(result == [set])
-    }
+        @Test
+        func `subsets of size equal to count returns original set`() {
+            let set: Set = [1, 2, 3]
+            let result = set.subsets(ofSize: 3)
 
-    @Test
-    func `subsets of size 2 from 3 elements returns 3 subsets`() {
-        let set: Set = [1, 2, 3]
-        let result = set.subsets(ofSize: 2)
+            #expect(result == [set])
+        }
 
-        #expect(result.count == 3)
-        #expect(result.contains([1, 2]))
-        #expect(result.contains([1, 3]))
-        #expect(result.contains([2, 3]))
-    }
+        @Test
+        func `subsets of size 2 from 3 elements returns 3 subsets`() {
+            let set: Set = [1, 2, 3]
+            let result = set.subsets(ofSize: 2)
 
-    @Test
-    func `subsets of size 1 returns all singleton sets`() {
-        let set: Set = [1, 2, 3]
-        let result = set.subsets(ofSize: 1)
+            #expect(result.count == 3)
+            #expect(result.contains([1, 2]))
+            #expect(result.contains([1, 3]))
+            #expect(result.contains([2, 3]))
+        }
 
-        #expect(result.count == 3)
-        #expect(result.contains([1]))
-        #expect(result.contains([2]))
-        #expect(result.contains([3]))
-    }
+        @Test
+        func `subsets of size 1 returns all singleton sets`() {
+            let set: Set = [1, 2, 3]
+            let result = set.subsets(ofSize: 1)
 
-    @Test
-    func `subsets with negative size returns empty`() {
-        let set: Set = [1, 2, 3]
-        let result = set.subsets(ofSize: -1)
+            #expect(result.count == 3)
+            #expect(result.contains([1]))
+            #expect(result.contains([2]))
+            #expect(result.contains([3]))
+        }
 
-        #expect(result.isEmpty)
-    }
+        @Test
+        func `subsets with negative size returns empty`() {
+            let set: Set = [1, 2, 3]
+            let result = set.subsets(ofSize: -1)
 
-    @Test
-    func `subsets with size greater than count returns empty`() {
-        let set: Set = [1, 2, 3]
-        let result = set.subsets(ofSize: 5)
+            #expect(result.isEmpty)
+        }
 
-        #expect(result.isEmpty)
-    }
+        @Test
+        func `subsets with size greater than count returns empty`() {
+            let set: Set = [1, 2, 3]
+            let result = set.subsets(ofSize: 5)
 
-    @Test
-    func `subsets count matches binomial coefficient`() {
-        let set: Set = [1, 2, 3, 4]
+            #expect(result.isEmpty)
+        }
 
-        let result = set.subsets(ofSize: 2)
-        #expect(result.count == 6)
-    }
+        @Test
+        func `subsets count matches binomial coefficient`() {
+            let set: Set = [1, 2, 3, 4]
 
-    @Test
-    func `cartesian product produces all pairs`() {
-        let a: Set = [1, 2]
-        let b: Set = ["x", "y"]
-        let result = a.cartesian.product(b)
+            let result = set.subsets(ofSize: 2)
+            #expect(result.count == 6)
+        }
 
-        #expect(result.count == 4)
-        #expect(result.contains(where: { $0 == (1, "x") }))
-        #expect(result.contains(where: { $0 == (1, "y") }))
-        #expect(result.contains(where: { $0 == (2, "x") }))
-        #expect(result.contains(where: { $0 == (2, "y") }))
-    }
+        @Test
+        func `cartesian product produces all pairs`() {
+            let a: Set = [1, 2]
+            let b: Set = ["x", "y"]
+            let result = a.cartesian.product(b)
 
-    @Test
-    func `cartesian product with empty set returns empty`() {
-        let a: Set = [1, 2]
-        let b: Set<String> = []
-        let result = a.cartesian.product(b)
+            #expect(result.count == 4)
+            #expect(result.contains(where: { $0 == (1, "x") }))
+            #expect(result.contains(where: { $0 == (1, "y") }))
+            #expect(result.contains(where: { $0 == (2, "x") }))
+            #expect(result.contains(where: { $0 == (2, "y") }))
+        }
 
-        #expect(result.isEmpty)
-    }
+        @Test
+        func `cartesian product with empty set returns empty`() {
+            let a: Set = [1, 2]
+            let b: Set<String> = []
+            let result = a.cartesian.product(b)
 
-    @Test
-    func `cartesian product count equals product of cardinalities`() {
-        let a: Set = [1, 2, 3]
-        let b: Set = ["a", "b", "c", "d"]
-        let result = a.cartesian.product(b)
+            #expect(result.isEmpty)
+        }
 
-        #expect(result.count == a.count * b.count)
-    }
+        @Test
+        func `cartesian product count equals product of cardinalities`() {
+            let a: Set = [1, 2, 3]
+            let b: Set = ["a", "b", "c", "d"]
+            let result = a.cartesian.product(b)
 
-    @Test
-    func `cartesian square includes all pairs from same set`() {
-        let set: Set = [1, 2, 3]
-        let result = set.cartesian.square()
+            #expect(result.count == a.count * b.count)
+        }
 
-        #expect(result.count == 9)
-        #expect(result.contains(where: { $0 == (1, 1) }))
-        #expect(result.contains(where: { $0 == (1, 2) }))
-        #expect(result.contains(where: { $0 == (2, 3) }))
-        #expect(result.contains(where: { $0 == (3, 3) }))
-    }
+        @Test
+        func `cartesian square includes all pairs from same set`() {
+            let set: Set = [1, 2, 3]
+            let result = set.cartesian.square()
 
-    @Test
-    func `cartesian square count equals n squared`() {
-        let set: Set = [1, 2, 3, 4]
-        let result = set.cartesian.square()
+            #expect(result.count == 9)
+            #expect(result.contains(where: { $0 == (1, 1) }))
+            #expect(result.contains(where: { $0 == (1, 2) }))
+            #expect(result.contains(where: { $0 == (2, 3) }))
+            #expect(result.contains(where: { $0 == (3, 3) }))
+        }
 
-        #expect(result.count == set.count * set.count)
+        @Test
+        func `cartesian square count equals n squared`() {
+            let set: Set = [1, 2, 3, 4]
+            let result = set.cartesian.square()
+
+            #expect(result.count == set.count * set.count)
+        }
     }
 }

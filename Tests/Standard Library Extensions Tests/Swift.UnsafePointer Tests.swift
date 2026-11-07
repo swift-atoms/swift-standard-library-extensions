@@ -2,11 +2,15 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-@Suite
-struct `UnsafePointer - Extensions` {
+enum `Swift.UnsafePointer Tests` {}
 
-    @Test
-    func `Placeholder test`() {
+extension `Swift.UnsafePointer Tests` {
+    @Suite
+    struct `UnsafePointer - Extensions` {
 
+        @Test
+        func `Placeholder test`() {
+
+        }
     }
 }

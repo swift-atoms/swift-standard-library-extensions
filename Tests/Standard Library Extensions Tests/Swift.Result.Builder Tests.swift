@@ -10,7 +10,9 @@ struct `Result.Builder Tests` {
         case second
         case third
     }
+}
 
+extension `Result.Builder Tests` {
     @Suite
     struct `Result.Builder (First Success)` {
 
