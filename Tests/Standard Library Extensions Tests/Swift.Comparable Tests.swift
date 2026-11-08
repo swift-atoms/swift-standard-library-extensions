@@ -2,153 +2,149 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-enum `Swift.Comparable Tests` {}
+@Suite
+struct `Comparable Clamping` {
 
-extension `Swift.Comparable Tests` {
-    @Suite
-    struct `Comparable Clamping` {
+    @Test
+    func `Clamping value within range returns value`() {
+        #expect(5.clamped(to: 0...10) == 5)
+        #expect(0.clamped(to: 0...10) == 0)
+        #expect(10.clamped(to: 0...10) == 10)
+    }
 
-        @Test
-        func `Clamping value within range returns value`() {
-            #expect(5.clamped(to: 0...10) == 5)
-            #expect(0.clamped(to: 0...10) == 0)
-            #expect(10.clamped(to: 0...10) == 10)
+    @Test
+    func `Clamping at exact boundaries`() {
+        #expect(0.clamped(to: 0...100) == 0)
+        #expect(100.clamped(to: 0...100) == 100)
+        #expect((-5).clamped(to: -5...5) == -5)
+        #expect(5.clamped(to: -5...5) == 5)
+    }
+
+    @Test
+    func `Clamping value above range returns upper bound`() {
+        #expect(15.clamped(to: 0...10) == 10)
+        #expect(100.clamped(to: 0...10) == 10)
+        #expect(1000.clamped(to: 0...10) == 10)
+    }
+
+    @Test
+    func `Clamping value below range returns lower bound`() {
+        #expect((-5).clamped(to: 0...10) == 0)
+        #expect((-100).clamped(to: 0...10) == 0)
+        #expect((-1000).clamped(to: 0...10) == 0)
+    }
+
+    @Test
+    func `Clamping with Double`() {
+        #expect(5.5.clamped(to: 0.0...10.0) == 5.5)
+        #expect(15.5.clamped(to: 0.0...10.0) == 10.0)
+        #expect((-5.5).clamped(to: 0.0...10.0) == 0.0)
+    }
+
+    @Test
+    func `Clamping with Float`() {
+        let value: Float = 5.5
+        let clamped = value.clamped(to: 0.0...10.0)
+        #expect(clamped == 5.5)
+    }
+
+    @Test
+    func `Clamping with UInt8`() {
+        let value: UInt8 = 200
+        #expect(value.clamped(to: 0...100) == 100)
+        #expect(UInt8(50).clamped(to: 0...100) == 50)
+    }
+
+    @Test
+    func `Clamping with Int16`() {
+        let value: Int16 = 1000
+        #expect(value.clamped(to: -100...100) == 100)
+        #expect(Int16(-500).clamped(to: -100...100) == -100)
+    }
+
+    @Test
+    func `Clamping to single value range`() {
+        #expect(5.clamped(to: 7...7) == 7)
+        #expect(10.clamped(to: 7...7) == 7)
+        #expect(0.clamped(to: 7...7) == 7)
+    }
+
+    @Test
+    func `Clamping strings lexicographically`() {
+        #expect("dog".clamped(to: "cat"..."zebra") == "dog")
+        #expect("apple".clamped(to: "cat"..."zebra") == "cat")
+        #expect("zoo".clamped(to: "cat"..."zebra") == "zebra")
+    }
+
+    @Test
+    func `Clamping characters`() {
+        let char: Character = "m"
+        #expect(char.clamped(to: "a"..."z") == "m")
+        #expect(Character("5").clamped(to: "a"..."z") == "a")
+        #expect(Character("~").clamped(to: "a"..."z") == "z")
+    }
+
+    @Test
+    func `Order preservation - monotonicity`() {
+
+        let range = 0...10
+
+        let x = 3
+        let y = 7
+        #expect(x <= y)
+        #expect(x.clamped(to: range) <= y.clamped(to: range))
+
+        let a = -5
+        let b = 15
+        #expect(a <= b)
+        #expect(a.clamped(to: range) <= b.clamped(to: range))
+    }
+
+    @Test
+    func `Codomain restriction property`() {
+
+        let range = 0...10
+
+        for value in [-100, -10, -1, 0, 5, 10, 11, 100] {
+            let clamped = value.clamped(to: range)
+            #expect(clamped >= range.lowerBound)
+            #expect(clamped <= range.upperBound)
         }
+    }
 
-        @Test
-        func `Clamping at exact boundaries`() {
-            #expect(0.clamped(to: 0...100) == 0)
-            #expect(100.clamped(to: 0...100) == 100)
-            #expect((-5).clamped(to: -5...5) == -5)
-            #expect(5.clamped(to: -5...5) == 5)
+    @Test
+    func `Identity morphism for values in range`() {
+
+        let range = 0...10
+
+        (0...10).forEach { value in
+            #expect(value.clamped(to: range) == value)
         }
+    }
 
-        @Test
-        func `Clamping value above range returns upper bound`() {
-            #expect(15.clamped(to: 0...10) == 10)
-            #expect(100.clamped(to: 0...10) == 10)
-            #expect(1000.clamped(to: 0...10) == 10)
+    @Test
+    func `Idempotence property`() {
+
+        let range = 0...10
+
+        for value in [-100, -10, 0, 5, 10, 100] {
+            let onceClamped = value.clamped(to: range)
+            let twiceClamped = onceClamped.clamped(to: range)
+            #expect(onceClamped == twiceClamped)
         }
+    }
 
-        @Test
-        func `Clamping value below range returns lower bound`() {
-            #expect((-5).clamped(to: 0...10) == 0)
-            #expect((-100).clamped(to: 0...10) == 0)
-            #expect((-1000).clamped(to: 0...10) == 0)
-        }
+    @Test
+    func `Clamping extreme values`() {
+        #expect(Int.max.clamped(to: 0...100) == 100)
+        #expect(Int.min.clamped(to: 0...100) == 0)
+        #expect(Int.min.clamped(to: -100...100) == -100)
+    }
 
-        @Test
-        func `Clamping with Double`() {
-            #expect(5.5.clamped(to: 0.0...10.0) == 5.5)
-            #expect(15.5.clamped(to: 0.0...10.0) == 10.0)
-            #expect((-5.5).clamped(to: 0.0...10.0) == 0.0)
-        }
-
-        @Test
-        func `Clamping with Float`() {
-            let value: Float = 5.5
-            let clamped = value.clamped(to: 0.0...10.0)
-            #expect(clamped == 5.5)
-        }
-
-        @Test
-        func `Clamping with UInt8`() {
-            let value: UInt8 = 200
-            #expect(value.clamped(to: 0...100) == 100)
-            #expect(UInt8(50).clamped(to: 0...100) == 50)
-        }
-
-        @Test
-        func `Clamping with Int16`() {
-            let value: Int16 = 1000
-            #expect(value.clamped(to: -100...100) == 100)
-            #expect(Int16(-500).clamped(to: -100...100) == -100)
-        }
-
-        @Test
-        func `Clamping to single value range`() {
-            #expect(5.clamped(to: 7...7) == 7)
-            #expect(10.clamped(to: 7...7) == 7)
-            #expect(0.clamped(to: 7...7) == 7)
-        }
-
-        @Test
-        func `Clamping strings lexicographically`() {
-            #expect("dog".clamped(to: "cat"..."zebra") == "dog")
-            #expect("apple".clamped(to: "cat"..."zebra") == "cat")
-            #expect("zoo".clamped(to: "cat"..."zebra") == "zebra")
-        }
-
-        @Test
-        func `Clamping characters`() {
-            let char: Character = "m"
-            #expect(char.clamped(to: "a"..."z") == "m")
-            #expect(Character("5").clamped(to: "a"..."z") == "a")
-            #expect(Character("~").clamped(to: "a"..."z") == "z")
-        }
-
-        @Test
-        func `Order preservation - monotonicity`() {
-
-            let range = 0...10
-
-            let x = 3
-            let y = 7
-            #expect(x <= y)
-            #expect(x.clamped(to: range) <= y.clamped(to: range))
-
-            let a = -5
-            let b = 15
-            #expect(a <= b)
-            #expect(a.clamped(to: range) <= b.clamped(to: range))
-        }
-
-        @Test
-        func `Codomain restriction property`() {
-
-            let range = 0...10
-
-            for value in [-100, -10, -1, 0, 5, 10, 11, 100] {
-                let clamped = value.clamped(to: range)
-                #expect(clamped >= range.lowerBound)
-                #expect(clamped <= range.upperBound)
-            }
-        }
-
-        @Test
-        func `Identity morphism for values in range`() {
-
-            let range = 0...10
-
-            (0...10).forEach { value in
-                #expect(value.clamped(to: range) == value)
-            }
-        }
-
-        @Test
-        func `Idempotence property`() {
-
-            let range = 0...10
-
-            for value in [-100, -10, 0, 5, 10, 100] {
-                let onceClamped = value.clamped(to: range)
-                let twiceClamped = onceClamped.clamped(to: range)
-                #expect(onceClamped == twiceClamped)
-            }
-        }
-
-        @Test
-        func `Clamping extreme values`() {
-            #expect(Int.max.clamped(to: 0...100) == 100)
-            #expect(Int.min.clamped(to: 0...100) == 0)
-            #expect(Int.min.clamped(to: -100...100) == -100)
-        }
-
-        @Test
-        func `Clamping with negative ranges`() {
-            #expect((-3).clamped(to: -10...(-5)) == -5)
-            #expect((-15).clamped(to: -10...(-5)) == -10)
-            #expect(0.clamped(to: -10...(-5)) == -5)
-        }
+    @Test
+    func `Clamping with negative ranges`() {
+        #expect((-3).clamped(to: -10...(-5)) == -5)
+        #expect((-15).clamped(to: -10...(-5)) == -10)
+        #expect(0.clamped(to: -10...(-5)) == -5)
     }
 }

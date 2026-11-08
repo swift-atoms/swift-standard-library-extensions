@@ -2,15 +2,11 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-enum `Swift.Float Tests` {}
+@Suite
+struct `Float - Extensions` {
 
-extension `Swift.Float Tests` {
-    @Suite
-    struct `Float - Extensions` {
+    @Test
+    func `Placeholder test`() {
 
-        @Test
-        func `Placeholder test`() {
-
-        }
     }
 }

@@ -4,9 +4,7 @@ import Testing
 
 @Suite
 struct `Set.Builder Tests` {
-}
 
-extension `Set.Builder Tests` {
     @Suite
     struct `Expression Building` {
 
@@ -178,7 +176,7 @@ extension `Set.Builder Tests` {
         @Test
         func `Set initialization with for loop`() {
             let set = Set {
-                (1...5).forEach { i in
+                for i in 1...5 {
                     i
                 }
             }

@@ -4,9 +4,7 @@ import Testing
 
 @Suite
 struct `ArraySlice.Builder Tests` {
-}
 
-extension `ArraySlice.Builder Tests` {
     @Suite
     struct `Basic Construction` {
 
@@ -115,7 +113,7 @@ extension `ArraySlice.Builder Tests` {
         @Test
         func `For loop`() {
             let slice: ArraySlice<Int> = ArraySlice {
-                (1...3).forEach { i in
+                for i in 1...3 {
                     i * 10
                 }
             }

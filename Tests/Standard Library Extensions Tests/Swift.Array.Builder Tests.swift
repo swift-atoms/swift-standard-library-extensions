@@ -4,9 +4,7 @@ import Testing
 
 @Suite
 struct `Array.Builder Tests` {
-}
 
-extension `Array.Builder Tests` {
     @Suite
     struct `Expression Building` {
 
@@ -152,7 +150,7 @@ extension `Array.Builder Tests` {
         @Test
         func `For loop`() {
             let array: [Int] = Array {
-                (1...3).forEach { i in
+                for i in 1...3 {
                     i * 2
                 }
             }
@@ -163,7 +161,7 @@ extension `Array.Builder Tests` {
         func `Complex for loop with nested arrays`() {
             let array: [Int] = Array {
                 0
-                (1...2).forEach { i in
+                for i in 1...2 {
                     [i, i + 10]
                 }
                 100
@@ -262,7 +260,7 @@ extension `Array.Builder Tests` {
         @Test
         func `Large array construction`() {
             let array: [Int] = Array {
-                (1...100).forEach { i in
+                for i in 1...100 {
                     i
                 }
             }

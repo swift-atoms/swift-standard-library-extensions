@@ -2,15 +2,11 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-enum `Swift.Dictionary Tests` {}
+@Suite
+struct `Dictionary - Extensions` {
 
-extension `Swift.Dictionary Tests` {
-    @Suite
-    struct `Dictionary - Extensions` {
+    @Test
+    func `Placeholder test`() {
 
-        @Test
-        func `Placeholder test`() {
-
-        }
     }
 }

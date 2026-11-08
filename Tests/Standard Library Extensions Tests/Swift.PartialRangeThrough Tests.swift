@@ -2,15 +2,11 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-enum `Swift.PartialRangeThrough Tests` {}
+@Suite
+struct `PartialRangeThrough - Extensions` {
 
-extension `Swift.PartialRangeThrough Tests` {
-    @Suite
-    struct `PartialRangeThrough - Extensions` {
+    @Test
+    func `Placeholder test`() {
 
-        @Test
-        func `Placeholder test`() {
-
-        }
     }
 }

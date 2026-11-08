@@ -2,15 +2,11 @@ import Testing
 
 @testable import Standard_Library_Extensions
 
-enum `Swift.PartialRangeUpTo Tests` {}
+@Suite
+struct `PartialRangeUpTo - Extensions` {
 
-extension `Swift.PartialRangeUpTo Tests` {
-    @Suite
-    struct `PartialRangeUpTo - Extensions` {
+    @Test
+    func `Placeholder test`() {
 
-        @Test
-        func `Placeholder test`() {
-
-        }
     }
 }
