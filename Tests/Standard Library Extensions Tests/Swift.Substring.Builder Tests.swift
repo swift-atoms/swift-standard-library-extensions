@@ -110,7 +110,7 @@ struct `Substring.Builder Tests` {
         @Test
         func `For loop`() {
             let result: Substring = Substring {
-                for i in 1...3 {
+                (1...3).forEach { i in
                     "Line \(i)"
                 }
             }
