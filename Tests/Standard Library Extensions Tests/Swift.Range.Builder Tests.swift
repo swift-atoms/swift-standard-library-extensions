@@ -4,9 +4,7 @@ import Testing
 
 @Suite
 struct `Range.Builder Tests` {
-}
 
-extension `Range.Builder Tests` {
     @Suite
     struct `Basic Construction` {
 
@@ -92,7 +90,7 @@ extension `Range.Builder Tests` {
         @Test
         func `For loop`() {
             let ranges = Range.build {
-                (0..<3).forEach { i in
+                for i in 0..<3 {
                     (i * 10)..<(i * 10 + 5)
                 }
             }
