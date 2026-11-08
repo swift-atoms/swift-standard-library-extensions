@@ -4,9 +4,7 @@ import Testing
 
 @Suite
 struct `Substring.Builder Tests` {
-}
 
-extension `Substring.Builder Tests` {
     @Suite
     struct `Basic Construction` {
 
@@ -112,7 +110,7 @@ extension `Substring.Builder Tests` {
         @Test
         func `For loop`() {
             let result: Substring = Substring {
-                (1...3).forEach { i in
+                for i in 1...3 {
                     "Line \(i)"
                 }
             }
