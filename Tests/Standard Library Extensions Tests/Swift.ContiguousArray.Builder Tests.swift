@@ -4,9 +4,7 @@ import Testing
 
 @Suite
 struct `ContiguousArray.Builder Tests` {
-}
 
-extension `ContiguousArray.Builder Tests` {
     @Suite
     struct `Basic Construction` {
 
@@ -115,7 +113,7 @@ extension `ContiguousArray.Builder Tests` {
         @Test
         func `For loop`() {
             let array: ContiguousArray<Int> = ContiguousArray {
-                (1...3).forEach { i in
+                for i in 1...3 {
                     i * 10
                 }
             }
