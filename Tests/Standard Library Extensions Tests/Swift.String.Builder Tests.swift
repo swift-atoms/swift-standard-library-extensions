@@ -129,7 +129,7 @@ extension `String.Builder Tests` {
         func `For loop string building`() {
             let result = String {
                 "Header"
-                for i in 1...3 {
+                (1...3).forEach { i in
                     "Item \(i)"
                 }
                 "Footer"
@@ -267,7 +267,7 @@ extension `String.Builder Tests` {
         func `Large string building`() {
             let result = String {
                 "Large String Test"
-                for i in 1...100 {
+                (1...100).forEach { i in
                     "Line \(i)"
                 }
                 "End of large string"

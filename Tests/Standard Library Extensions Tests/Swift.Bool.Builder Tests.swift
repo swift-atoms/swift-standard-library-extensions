@@ -90,7 +90,7 @@ extension `Bool.Builder Tests` {
         @Test
         func `For loop with false`() {
             let result = Bool.all {
-                for i in 1...3 {
+                (1...3).forEach { i in
                     i != 2
                 }
             }
@@ -181,7 +181,7 @@ extension `Bool.Builder Tests` {
         @Test
         func `For loop with true`() {
             let result = Bool.any {
-                for i in 1...3 {
+                (1...3).forEach { i in
                     i == 2
                 }
             }
@@ -234,7 +234,7 @@ extension `Bool.Builder Tests` {
         @Test
         func `For loop counting`() {
             let result = Bool.count {
-                for i in 1...10 {
+                (1...10).forEach { i in
                     i % 2 == 0
                 }
             }

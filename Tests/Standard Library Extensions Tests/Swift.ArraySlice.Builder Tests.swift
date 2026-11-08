@@ -115,7 +115,7 @@ extension `ArraySlice.Builder Tests` {
         @Test
         func `For loop`() {
             let slice: ArraySlice<Int> = ArraySlice {
-                for i in 1...3 {
+                (1...3).forEach { i in
                     i * 10
                 }
             }

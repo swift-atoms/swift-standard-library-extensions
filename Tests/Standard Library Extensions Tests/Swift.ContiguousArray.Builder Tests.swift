@@ -115,7 +115,7 @@ extension `ContiguousArray.Builder Tests` {
         @Test
         func `For loop`() {
             let array: ContiguousArray<Int> = ContiguousArray {
-                for i in 1...3 {
+                (1...3).forEach { i in
                     i * 10
                 }
             }

@@ -123,7 +123,7 @@ extension `Result.Builder Tests` {
         @Test
         func `For loop collects all`() {
             let result = Result<Int, TestError>.all {
-                for i in 1...3 {
+                (1...3).forEach { i in
                     Result<Int, TestError>.success(i * 10)
                 }
             }
@@ -134,7 +134,7 @@ extension `Result.Builder Tests` {
         @Test
         func `For loop fails on error`() {
             let result = Result<Int, TestError>.all {
-                for i in 1...3 {
+                (1...3).forEach { i in
                     if i == 2 {
                         Result<Int, TestError>.failure(.second)
                     } else {

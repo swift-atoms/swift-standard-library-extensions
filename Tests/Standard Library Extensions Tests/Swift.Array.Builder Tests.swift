@@ -152,7 +152,7 @@ extension `Array.Builder Tests` {
         @Test
         func `For loop`() {
             let array: [Int] = Array {
-                for i in 1...3 {
+                (1...3).forEach { i in
                     i * 2
                 }
             }
@@ -163,7 +163,7 @@ extension `Array.Builder Tests` {
         func `Complex for loop with nested arrays`() {
             let array: [Int] = Array {
                 0
-                for i in 1...2 {
+                (1...2).forEach { i in
                     [i, i + 10]
                 }
                 100
@@ -262,7 +262,7 @@ extension `Array.Builder Tests` {
         @Test
         func `Large array construction`() {
             let array: [Int] = Array {
-                for i in 1...100 {
+                (1...100).forEach { i in
                     i
                 }
             }

@@ -155,7 +155,7 @@ extension `Dictionary.Builder Tests` {
         @Test
         func `For loop`() {
             let dict: [String: Int] = Dictionary {
-                for i in 1...3 {
+                (1...3).forEach { i in
                     ("key\(i)", i)
                 }
             }
@@ -304,7 +304,7 @@ extension `Dictionary.Builder Tests` {
         @Test
         func `Large dictionary construction`() {
             let dict: [String: Int] = Dictionary {
-                for i in 1...100 {
+                (1...100).forEach { i in
                     ("key\(i)", i)
                 }
             }

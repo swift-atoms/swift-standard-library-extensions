@@ -178,7 +178,7 @@ extension `Set.Builder Tests` {
         @Test
         func `Set initialization with for loop`() {
             let set = Set {
-                for i in 1...5 {
+                (1...5).forEach { i in
                     i
                 }
             }

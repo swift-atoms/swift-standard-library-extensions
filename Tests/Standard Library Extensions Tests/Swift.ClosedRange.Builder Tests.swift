@@ -110,7 +110,7 @@ extension `ClosedRange.Builder Tests` {
         @Test
         func `For loop`() {
             let ranges = ClosedRange.build {
-                for i in 0..<3 {
+                (0..<3).forEach { i in
                     (i * 10)...(i * 10 + 5)
                 }
             }
