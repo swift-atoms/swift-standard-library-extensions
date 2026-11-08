@@ -4,9 +4,7 @@ import Testing
 
 @Suite
 struct `Bool.Builder Tests` {
-}
 
-extension `Bool.Builder Tests` {
     @Suite
     struct `Bool.all (AND Semantics)` {
 
@@ -90,7 +88,7 @@ extension `Bool.Builder Tests` {
         @Test
         func `For loop with false`() {
             let result = Bool.all {
-                (1...3).forEach { i in
+                for i in 1...3 {
                     i != 2
                 }
             }
@@ -181,7 +179,7 @@ extension `Bool.Builder Tests` {
         @Test
         func `For loop with true`() {
             let result = Bool.any {
-                (1...3).forEach { i in
+                for i in 1...3 {
                     i == 2
                 }
             }
@@ -234,7 +232,7 @@ extension `Bool.Builder Tests` {
         @Test
         func `For loop counting`() {
             let result = Bool.count {
-                (1...10).forEach { i in
+                for i in 1...10 {
                     i % 2 == 0
                 }
             }
