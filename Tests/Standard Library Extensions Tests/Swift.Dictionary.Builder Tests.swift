@@ -4,9 +4,7 @@ import Testing
 
 @Suite
 struct `Dictionary.Builder Tests` {
-}
 
-extension `Dictionary.Builder Tests` {
     @Suite
     struct `Expression Building` {
 
@@ -155,7 +153,7 @@ extension `Dictionary.Builder Tests` {
         @Test
         func `For loop`() {
             let dict: [String: Int] = Dictionary {
-                (1...3).forEach { i in
+                for i in 1...3 {
                     ("key\(i)", i)
                 }
             }
@@ -304,7 +302,7 @@ extension `Dictionary.Builder Tests` {
         @Test
         func `Large dictionary construction`() {
             let dict: [String: Int] = Dictionary {
-                (1...100).forEach { i in
+                for i in 1...100 {
                     ("key\(i)", i)
                 }
             }
