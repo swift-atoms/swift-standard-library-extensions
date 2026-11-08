@@ -33,7 +33,7 @@ actor Holder {
     func getStored() -> Box { stored }
 }
 
-struct UniqueResource: ~Copyable, Sendable {
+fileprivate struct UniqueResource: ~Copyable, Sendable {
     let id: Int
 }
 
@@ -41,7 +41,7 @@ struct Handle: ~Copyable {
     let fd: Int32
 }
 
-actor ResourceFactory {
+fileprivate actor ResourceFactory {
     private var counter = 0
 
     func make() -> UniqueResource {

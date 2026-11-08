@@ -5,7 +5,7 @@ import Testing
 @Suite
 struct `Result.Builder Tests` {
 
-    enum TestError: Swift.Error, Equatable {
+    fileprivate enum TestError: Swift.Error, Equatable {
         case first
         case second
         case third
