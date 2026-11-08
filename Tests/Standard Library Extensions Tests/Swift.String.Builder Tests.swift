@@ -4,9 +4,7 @@ import Testing
 
 @Suite
 struct `String.Builder Tests` {
-}
 
-extension `String.Builder Tests` {
     @Suite
     struct `Expression Building` {
 
@@ -129,7 +127,7 @@ extension `String.Builder Tests` {
         func `For loop string building`() {
             let result = String {
                 "Header"
-                (1...3).forEach { i in
+                for i in 1...3 {
                     "Item \(i)"
                 }
                 "Footer"
@@ -267,7 +265,7 @@ extension `String.Builder Tests` {
         func `Large string building`() {
             let result = String {
                 "Large String Test"
-                (1...100).forEach { i in
+                for i in 1...100 {
                     "Line \(i)"
                 }
                 "End of large string"
