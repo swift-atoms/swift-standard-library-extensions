@@ -17,17 +17,14 @@ extension Swift.Set<String>.`Swift` {
     /// must escape with backticks: declaration, statement, expression and type
     /// keywords.
     public static let keywords: Set<String> = [
-        // Declarations
         "associatedtype", "borrowing", "class", "consuming", "deinit", "enum",
         "extension", "fileprivate", "func", "import", "init", "inout", "internal",
         "let", "nonisolated", "open", "operator", "private", "precedencegroup",
         "protocol", "public", "rethrows", "static", "struct", "subscript",
         "typealias", "var",
-        // Statements
         "break", "case", "catch", "continue", "default", "defer", "do", "else",
         "fallthrough", "for", "guard", "if", "in", "repeat", "return", "throw",
         "switch", "where", "while",
-        // Expressions and types
         "Any", "as", "await", "false", "is", "nil", "self", "Self", "super",
         "throws", "true", "try",
     ]

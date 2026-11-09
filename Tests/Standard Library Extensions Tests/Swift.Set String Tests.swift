@@ -3,8 +3,7 @@ import Testing
 @testable import Standard_Library_Extensions
 
 @Suite
-struct `Set String - Swift keywords` {
-
+struct `Keywords Tests` {
     @Test(arguments: [
         "associatedtype", "deinit", "rethrows", "precedencegroup", "Any",
         "await", "class", "func", "self", "Self", "throws", "while",
