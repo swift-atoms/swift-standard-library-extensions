@@ -88,10 +88,26 @@ struct `FloatingPoint - Extensions` {
         #expect(base.power(exponent) == expected)
     }
 
+    @Test(arguments: [
+        (2.0, -1, 0.5),
+        (2.0, -3, 0.125),
+        (0.5, -2, 4.0),
+        (10.0, -2, 0.01),
+    ])
+    func `power with negative exponent returns the reciprocal`(testCase: (Double, Int, Double)) {
+        let (base, exponent, expected) = testCase
+        #expect(base.power(exponent).isApproximatelyEqual(to: expected, tolerance: 1e-15))
+    }
+
     @Test
-    func `power with negative exponent returns zero`() {
-        let result = 2.0.power(-3)
-        #expect(result == 0.0)
+    func `power of zero with negative exponent is infinity`() {
+        #expect(0.0.power(-1) == .infinity)
+    }
+
+    @Test
+    func `power with Int min exponent does not trap`() {
+        #expect(2.0.power(.min) == 0.0)
+        #expect(1.0.power(.min) == 1.0)
     }
 
     @Test

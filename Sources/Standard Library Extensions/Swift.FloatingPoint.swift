@@ -12,11 +12,9 @@ extension Swift.FloatingPoint {
 
     @inlinable
     public func power(_ exponent: Int) -> Self {
-        guard exponent > 0 else { return exponent == 0 ? 1 : 0 }
-
         var result: Self = 1
         var base = self
-        var n = exponent
+        var n = exponent.magnitude
 
         while n > 0 {
             if n & 1 == 1 {
@@ -25,7 +23,7 @@ extension Swift.FloatingPoint {
             base *= base
             n >>= 1
         }
-        return result
+        return exponent < 0 ? 1 / result : result
     }
 
     @inlinable
