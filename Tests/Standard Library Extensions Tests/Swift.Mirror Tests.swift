@@ -199,3 +199,16 @@ extension `Mirror - Extensions` {
         #expect(Mirror.bytes(of: [Choice.none]) != Mirror.bytes(of: [Choice.small(0)]))
     }
 }
+
+extension `Mirror - Extensions` {
+    enum Mode: CustomStringConvertible { case first, second; var description: String { "mode" } }
+    enum Wrapped { case value(Mode), other(UInt64), nothing }
+
+    @Test
+    func `A case without a payload is told apart however it describes itself`() {
+        #expect(Mirror.bytes(of: Mode.first) != Mirror.bytes(of: Mode.second))
+        #expect(Mirror.bytes(of: Wrapped.value(.first)) != Mirror.bytes(of: Wrapped.value(.second)))
+        #expect(Mirror.bytes(of: Wrapped.nothing) != nil)
+        #expect(Mirror.bytes(of: Wrapped.nothing) != Mirror.bytes(of: Wrapped.other(0)))
+    }
+}

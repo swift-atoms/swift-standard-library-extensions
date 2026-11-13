@@ -255,15 +255,26 @@
             case .enum:
                 kind(.choice)
                 guard let child = mirror.children.first else {
-                    // A case without a payload, by its name: its memory may hold bytes another case left behind.
-                    guard subject == Value.self, !(value is any CustomStringConvertible), !(value is any CustomDebugStringConvertible),
+                    // A case without a payload: its memory where that is one byte, which then holds the case alone;
+                    // otherwise its raw value, or its name. A larger enum's memory may hold bytes another case left.
+                    guard subject == Value.self else { return false }
+                    if MemoryLayout<Value>.size <= 1 {
+                        number(0)
+                        memory(value)
+                        return true
+                    }
+                    if let raw = value as? any RawRepresentable {
+                        number(1)
+                        return write(any: raw.rawValue)
+                    }
+                    guard !(value is any CustomStringConvertible), !(value is any CustomDebugStringConvertible),
                         !(value is any TextOutputStreamable)
                     else { return false }
-                    number(0)
+                    number(2)
                     text(String(describing: value))
                     return true
                 }
-                number(1)
+                number(3)
                 text(child.label ?? "")
                 return write(any: child.value)
 
