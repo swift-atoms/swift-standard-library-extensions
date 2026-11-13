@@ -188,7 +188,7 @@ extension `Mirror - Extensions` {
 
     @Test
     func `Only memory that holds exactly the state is written as memory`() {
-        let structure = Swift.Mirror.Structure()
+        let structure = Swift.Mirror.Writer()
         #expect(structure.plain(Point(x: 1, y: 2)))
         #expect(structure.plain(Packed(a: 1, b: 2)))
         #expect(!structure.plain(Padded(a: 1, b: 2)))
@@ -210,5 +210,38 @@ extension `Mirror - Extensions` {
         #expect(Mirror.bytes(of: Wrapped.value(.first)) != Mirror.bytes(of: Wrapped.value(.second)))
         #expect(Mirror.bytes(of: Wrapped.nothing) != nil)
         #expect(Mirror.bytes(of: Wrapped.nothing) != Mirror.bytes(of: Wrapped.other(0)))
+    }
+}
+
+extension `Mirror - Extensions` {
+    enum Stroke: Swift.Mirror.Written {
+        case line([Point], Double)
+        case none
+
+        func write(into writer: Swift.Mirror.Writer) -> Bool {
+            switch self {
+            case .line(let points, let width):
+                writer.number(0)
+                writer.float(width)
+                guard !writer.again(points) else { return true }
+                writer.number(points.count)
+                for point in points {
+                    guard writer.write(point) else { return false }
+                }
+                return true
+            case .none:
+                writer.number(1)
+                return true
+            }
+        }
+    }
+
+    @Test
+    func `A written type is written as it writes itself`() {
+        let points = [Point(x: 1, y: 2), Point(x: 3, y: 4)]
+        #expect(Mirror.bytes(of: Stroke.line(points, 1)) == Mirror.bytes(of: Stroke.line(points.map { $0 }, 1)))
+        #expect(Mirror.bytes(of: Stroke.line(points, 1)) != Mirror.bytes(of: Stroke.line(points, 2)))
+        #expect(Mirror.bytes(of: Stroke.line(points, 1)) != Mirror.bytes(of: Stroke.none))
+        #expect(Mirror.bytes(of: [Stroke.line(points, 1), .line(points, 1)])!.count < Mirror.bytes(of: [Stroke.line(points, 1), .line(points.map { $0 }, 1)])!.count)
     }
 }

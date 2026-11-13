@@ -1,11 +1,12 @@
 #if !hasFeature(Embedded)
     extension Swift.Mirror {
         /// The writer of `bytes(of:)`: the bytes not yet handed on, where they go, and what it has learned on the way.
+        /// A `Swift.Mirror.Written` type writes itself through it.
         ///
         /// It names each type by its order of first appearance after the first time, decides once per type how its
         /// values are written, writes an array whose storage it met before as which one it was, and keeps those
         /// arrays alive until it is done, so that no storage it remembers is freed and reused under it.
-        final class Structure {
+        public final class Writer {
             var bytes: [UInt8] = []
             let sink: ((borrowing RawSpan) -> Void)?
             var types: [ObjectIdentifier: Int] = [:]
@@ -22,7 +23,7 @@
         }
     }
 
-    extension Swift.Mirror.Structure {
+    extension Swift.Mirror.Writer {
         /// What follows a part's type.
         enum Kind: UInt8 {
             case memory = 0
@@ -35,6 +36,7 @@
             case cycle = 7
             case fields = 8
             case again = 9
+            case written = 10
         }
 
         /// How the values of one type are written.
@@ -51,6 +53,8 @@
             case reflected
             /// As the value it gives for itself.
             case canonical
+            /// As it writes itself.
+            case written
         }
 
         /// An array's storage: where its elements lie, how many, and of what type.
@@ -67,7 +71,8 @@
             bytes.removeAll(keepingCapacity: true)
         }
 
-        func number(_ value: Int) {
+        /// A count, an index or a case's place, as eight bytes.
+        public func number(_ value: Int) {
             let wide = UInt64(value).littleEndian
             withUnsafeBytes(of: wide) { unsafe bytes.append(contentsOf: $0) }
         }
@@ -120,6 +125,8 @@
                 plan = .text
             } else if Mirror(reflecting: value).subjectType != Value.self {
                 plan = .reflected
+            } else if value is any Swift.Mirror.Written {
+                plan = .written
             } else if value is any Swift.Mirror.Canonical {
                 plan = .canonical
             } else if value is any Swift.Mirror.Contiguous {
@@ -133,6 +140,20 @@
             return plan
         }
 
+        /// A number in floating point, as its memory.
+        public func float(_ value: Double) {
+            withUnsafeBytes(of: value.bitPattern.littleEndian) { unsafe bytes.append(contentsOf: $0) }
+            if bytes.count >= 1 << 16 { flush() }
+        }
+
+        /// Whether an array's storage was met before in this writing, written as which one it was if so; the first
+        /// time it is remembered, and false. A `Swift.Mirror.Written` type that writes an array's elements itself
+        /// asks this first, so a shared part is written once.
+        public func again<Element>(_ array: [Element]) -> Bool {
+            let address = array.withUnsafeBufferPointer { UInt(bitPattern: $0.baseAddress) }
+            return again(Run(address: address, count: array.count, type: ObjectIdentifier([Element].self)), keeping: array)
+        }
+
         /// Whether a value's memory holds exactly its state, every byte of it, the same for equal values in every
         /// process: an integer, a floating-point number or a truth value, a part with no stored property that holds
         /// no reference, or a structure or tuple of such parts with no byte between them. An enum is never plain:
@@ -140,6 +161,7 @@
         func plain<Value>(_ value: Value) -> Bool {
             guard _isPOD(Value.self) else { return false }
             if let plan = plans[ObjectIdentifier(Value.self)] { return plan == .memory }
+            if MemoryLayout<Value>.size <= 1 { return true }
             if Value.self is any BinaryInteger.Type || Value.self is any BinaryFloatingPoint.Type || Value.self == Bool.self {
                 return true
             }
@@ -161,8 +183,9 @@
             }
         }
 
-        /// A value and its parts, or false where reflection cannot show it whole.
-        func write<Value>(_ value: Value) -> Bool {
+        /// A value and its parts, or false where reflection cannot show it whole: what a `Swift.Mirror.Written`
+        /// type writes of each of its parts.
+        public func write<Value>(_ value: Value) -> Bool {
             switch plan(for: value) {
             case .memory:
                 type(Value.self)
@@ -186,6 +209,12 @@
 
             case .reflected:
                 return reflect(value)
+
+            case .written:
+                guard let written = value as? any Swift.Mirror.Written else { return false }
+                type(Value.self)
+                kind(.written)
+                return written.write(into: self)
 
             case .canonical:
                 guard let canonical = value as? any Swift.Mirror.Canonical else { return false }
@@ -282,7 +311,7 @@
                 kind(.unordered)
                 var members: [[UInt8]] = []
                 for child in mirror.children {
-                    let member = Swift.Mirror.Structure(objects: objects)
+                    let member = Swift.Mirror.Writer(objects: objects)
                     guard member.write(any: child.value) else { return false }
                     members.append(member.bytes)
                 }

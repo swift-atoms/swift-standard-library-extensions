@@ -16,7 +16,7 @@
         /// a type with its own `customMirror` from outside the standard library, or a value whose state has no
         /// stored property to show. A pointer is written as its address, which is not its pointee.
         public static func bytes<Subject>(of subject: Subject) -> [UInt8]? {
-            let structure = Structure()
+            let structure = Writer()
             guard structure.write(subject) else { return nil }
             return structure.bytes
         }
@@ -25,7 +25,7 @@
         /// are the bytes, in order. False, after some pieces perhaps, where `bytes(of:)` is nil.
         public static func bytes<Subject>(of subject: Subject, into sink: (borrowing RawSpan) -> Void) -> Bool {
             withoutActuallyEscaping(sink) { sink in
-                let structure = Structure(sink: sink)
+                let structure = Writer(sink: sink)
                 guard structure.write(subject) else { return false }
                 structure.flush()
                 return true
