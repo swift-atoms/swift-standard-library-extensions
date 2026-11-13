@@ -85,10 +85,8 @@ struct `Mirror - Extensions` {
 
     @Test
     func `Members of a set or dictionary are written in their own order, not the hashing's`() {
-        var forward: [String: Int] = [:]
-        for index in 0..<64 { forward["key \(index)"] = index }
-        var backward: [String: Int] = [:]
-        for index in (0..<64).reversed() { backward["key \(index)"] = index }
+        let forward = Dictionary(uniqueKeysWithValues: (0..<64).map { ("key \($0)", $0) })
+        let backward = Dictionary(uniqueKeysWithValues: (0..<64).reversed().map { ("key \($0)", $0) })
         #expect(Mirror.bytes(of: forward) == Mirror.bytes(of: backward))
         let up = Set((0..<64).map { "member \($0)" })
         let down = Set((0..<64).reversed().map { "member \($0)" })
@@ -182,9 +180,21 @@ extension `Mirror - Extensions` {
 }
 
 extension `Mirror - Extensions` {
-    struct Padded { var a: UInt8; var b: UInt64 }
-    struct Packed { var a: UInt64; var b: UInt8 }
-    enum Choice { case small(UInt8), large(UInt64, UInt64), none }
+    struct Padded {
+        var a: UInt8
+        var b: UInt64
+    }
+
+    struct Packed {
+        var a: UInt64
+        var b: UInt8
+    }
+
+    enum Choice {
+        case small(UInt8)
+        case large(UInt64, UInt64)
+        case none
+    }
 
     @Test
     func `Only memory that holds exactly the state is written as memory`() {
@@ -201,8 +211,16 @@ extension `Mirror - Extensions` {
 }
 
 extension `Mirror - Extensions` {
-    enum Mode: CustomStringConvertible { case first, second; var description: String { "mode" } }
-    enum Wrapped { case value(Mode), other(UInt64), nothing }
+    enum Mode: CustomStringConvertible {
+        case first, second
+        var description: String { "mode" }
+    }
+
+    enum Wrapped {
+        case value(Mode)
+        case other(UInt64)
+        case nothing
+    }
 
     @Test
     func `A case without a payload is told apart however it describes itself`() {

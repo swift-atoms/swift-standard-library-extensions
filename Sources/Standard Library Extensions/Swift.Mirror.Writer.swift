@@ -24,53 +24,6 @@
     }
 
     extension Swift.Mirror.Writer {
-        /// What follows a part's type.
-        enum Kind: UInt8 {
-            case memory = 0
-            case text = 1
-            case run = 2
-            case optional = 3
-            case choice = 4
-            case unordered = 5
-            case object = 6
-            case cycle = 7
-            case fields = 8
-            case again = 9
-            case written = 10
-        }
-
-        /// How the values of one type are written.
-        enum Plan {
-            /// As their memory: the type holds no references.
-            case memory
-            /// As their UTF-8.
-            case text
-            /// As an array.
-            case run
-            /// Not at all: the type writes its own mirror.
-            case refused
-            /// Through `Mirror`.
-            case reflected
-            /// As the value it gives for itself.
-            case canonical
-            /// As it writes itself.
-            case written
-        }
-
-        /// What the writer knows of a type: how its values are written, and its order among the types named, once
-        /// it has been named.
-        struct Known {
-            let plan: Plan
-            var order: Int?
-        }
-
-        /// An array's storage: where its elements lie, how many, and of what type.
-        struct Run: Hashable {
-            let address: UInt
-            let count: Int
-            let type: ObjectIdentifier
-        }
-
         /// Hands the bytes so far to the sink, if there is one.
         func flush() {
             guard let sink, !bytes.isEmpty else { return }
@@ -78,14 +31,18 @@
             bytes.removeAll(keepingCapacity: true)
         }
 
-        /// A count, an index or a case's place, as eight bytes.
-        public func number(_ value: Int) {
-            let wide = UInt64(value).littleEndian
-            withUnsafeBytes(of: wide) { unsafe bytes.append(contentsOf: $0) }
+        /// A count, an index or a case's place, as eight bytes, little-endian.
+        public func number(_ value: UInt64) {
+            withUnsafeBytes(of: value.littleEndian) { unsafe bytes.append(contentsOf: $0) }
+        }
+
+        /// A count, an index or a case's place, which is never negative, as eight bytes.
+        func number(_ value: Int) {
+            number(UInt64(value))
         }
 
         func kind(_ kind: Kind) {
-            bytes.append(kind.rawValue)
+            bytes.append(kind.byte)
         }
 
         func text(_ text: String) {
@@ -291,7 +248,9 @@
             return false
         }
 
-        /// A value through its mirror. A value held in an existential is written as the type it holds.
+        /// A value through its mirror. A value held in an existential is written as the type it holds. A case
+        /// without a payload is written as its memory where that is one byte, which then holds the case alone;
+        /// otherwise as its raw value, or its name, since a larger enum's memory may hold bytes another case left.
         func reflect<Value>(_ value: Value) -> Bool {
             let mirror = Mirror(reflecting: value)
             let subject = mirror.subjectType
@@ -312,8 +271,6 @@
             case .enum:
                 kind(.choice)
                 guard let child = mirror.children.first else {
-                    // A case without a payload: its memory where that is one byte, which then holds the case alone;
-                    // otherwise its raw value, or its name. A larger enum's memory may hold bytes another case left.
                     guard subject == Value.self else { return false }
                     if MemoryLayout<Value>.size <= 1 {
                         number(0)
@@ -322,7 +279,7 @@
                     }
                     if let raw = value as? any RawRepresentable {
                         number(1)
-                        return write(any: raw.rawValue)
+                        return raw.written(by: self)
                     }
                     guard !(value is any CustomStringConvertible), !(value is any CustomDebugStringConvertible),
                         !(value is any TextOutputStreamable)
