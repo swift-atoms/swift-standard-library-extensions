@@ -13,9 +13,11 @@
             case fields = 8
             case again = 9
             case written = 10
-
-            /// The byte that stands for this kind.
-            var byte: UInt8 { self.rawValue }
         }
+    }
+
+    extension Swift.Mirror.Writer.Kind {
+        /// The byte that stands for this kind.
+        var byte: UInt8 { self.rawValue }
     }
 #endif
