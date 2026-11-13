@@ -180,3 +180,22 @@ extension `Mirror - Extensions` {
         #expect(Mirror(reflecting: Cached(name: "a", hash: 1)).children.map(\.label) == ["name", "hash"])
     }
 }
+
+extension `Mirror - Extensions` {
+    struct Padded { var a: UInt8; var b: UInt64 }
+    struct Packed { var a: UInt64; var b: UInt8 }
+    enum Choice { case small(UInt8), large(UInt64, UInt64), none }
+
+    @Test
+    func `Only memory that holds exactly the state is written as memory`() {
+        let structure = Swift.Mirror.Structure()
+        #expect(structure.plain(Point(x: 1, y: 2)))
+        #expect(structure.plain(Packed(a: 1, b: 2)))
+        #expect(!structure.plain(Padded(a: 1, b: 2)))
+        #expect(!structure.plain(Choice.small(1)))
+        #expect(!structure.plain(Double?.some(1)))
+        let choices: [Choice] = [.small(1), .large(2, 3), .none]
+        #expect(Mirror.bytes(of: choices) == Mirror.bytes(of: [Choice.small(1), .large(2, 3), .none]))
+        #expect(Mirror.bytes(of: [Choice.none]) != Mirror.bytes(of: [Choice.small(0)]))
+    }
+}

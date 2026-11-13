@@ -4,10 +4,10 @@
         /// for the value that outlives the process, which `Hasher` is not.
         ///
         /// A value of a `Swift.Mirror.Canonical` type is written as the value it gives for itself. Each part is
-        /// written with its type's name, so values of different types never meet. A part whose type
-        /// holds no references is written as its memory; a string as its UTF-8; an array of such parts as its
+        /// written with its type's name, so values of different types never meet. A number, a truth value, and a
+        /// structure or tuple of them with no byte between its fields is written as its memory; a string as its UTF-8; an array of such parts as its
         /// elements' memory; a dictionary or set with its members in the order of their own bytes, never the
-        /// order of the process's hashing; an enum with its case; anything else as its stored properties, one by
+        /// order of the process's hashing; an enum with its case, by name when it has no payload; anything else as its stored properties, one by
         /// one, through `Mirror`. A reference already on the way down is written as how far up it is.
         ///
         /// Two values with equal bytes are equal in every stored property reflection shows. The reverse does not

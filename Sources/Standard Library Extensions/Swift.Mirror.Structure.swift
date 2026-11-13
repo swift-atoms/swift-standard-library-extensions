@@ -115,7 +115,7 @@
             if let plan = plans[identifier] { return plan }
             let plan: Plan
             if _isPOD(Value.self) {
-                plan = .memory
+                plan = plain(value) ? .memory : .reflected
             } else if Value.self == String.self || Value.self == Substring.self || Value.self == Character.self {
                 plan = .text
             } else if Mirror(reflecting: value).subjectType != Value.self {
@@ -131,6 +131,34 @@
             }
             plans[identifier] = plan
             return plan
+        }
+
+        /// Whether a value's memory holds exactly its state, every byte of it, the same for equal values in every
+        /// process: an integer, a floating-point number or a truth value, a part with no stored property that holds
+        /// no reference, or a structure or tuple of such parts with no byte between them. An enum is never plain:
+        /// the bytes of a case's payload that a smaller case leaves unused are whatever they were.
+        func plain<Value>(_ value: Value) -> Bool {
+            guard _isPOD(Value.self) else { return false }
+            if let plan = plans[ObjectIdentifier(Value.self)] { return plan == .memory }
+            if Value.self is any BinaryInteger.Type || Value.self is any BinaryFloatingPoint.Type || Value.self == Bool.self {
+                return true
+            }
+            let mirror = Mirror(reflecting: value)
+            guard mirror.subjectType == Value.self else { return false }
+            switch mirror.displayStyle {
+            case .struct, .tuple, nil:
+                var size = 0
+                for child in mirror.children {
+                    func opened<Field>(_ field: Field) -> Bool {
+                        size += MemoryLayout<Field>.size
+                        return plain(field)
+                    }
+                    guard _openExistential(child.value, do: opened) else { return false }
+                }
+                return size == MemoryLayout<Value>.size || mirror.children.isEmpty
+            default:
+                return false
+            }
         }
 
         /// A value and its parts, or false where reflection cannot show it whole.
@@ -175,7 +203,7 @@
             }
             kind(.run)
             number(elements.count)
-            if _isPOD(Element.self) {
+            if let first = unsafe elements.first, plain(first), MemoryLayout<Element>.size == MemoryLayout<Element>.stride {
                 number(MemoryLayout<Element>.stride)
                 flush()
                 let raw = UnsafeRawBufferPointer(elements)
@@ -227,9 +255,12 @@
             case .enum:
                 kind(.choice)
                 guard let child = mirror.children.first else {
-                    guard subject == Value.self else { return false }
+                    // A case without a payload, by its name: its memory may hold bytes another case left behind.
+                    guard subject == Value.self, !(value is any CustomStringConvertible), !(value is any CustomDebugStringConvertible),
+                        !(value is any TextOutputStreamable)
+                    else { return false }
                     number(0)
-                    memory(value)
+                    text(String(describing: value))
                     return true
                 }
                 number(1)
