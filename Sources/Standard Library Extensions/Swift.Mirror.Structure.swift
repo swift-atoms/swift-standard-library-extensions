@@ -1,14 +1,23 @@
 #if !hasFeature(Embedded)
     extension Swift.Mirror {
-        /// The writer of `bytes(of:)`: the bytes so far, the types named so far by the order they were first
-        /// met, and the objects on the way down from the value.
+        /// The writer of `bytes(of:)`: the bytes not yet handed on, where they go, and what it has learned on the way.
+        ///
+        /// It names each type by its order of first appearance after the first time, decides once per type how its
+        /// values are written, writes an array whose storage it met before as which one it was, and keeps those
+        /// arrays alive until it is done, so that no storage it remembers is freed and reused under it.
         final class Structure {
             var bytes: [UInt8] = []
-            var types: [ObjectIdentifier: UInt64] = [:]
+            let sink: ((borrowing RawSpan) -> Void)?
+            var types: [ObjectIdentifier: Int] = [:]
+            var plans: [ObjectIdentifier: Plan] = [:]
+            var runs: [Run: Int] = [:]
+            var kept: [Any] = []
             var objects: [ObjectIdentifier]
 
-            init(objects: [ObjectIdentifier] = []) {
+            init(objects: [ObjectIdentifier] = [], sink: ((borrowing RawSpan) -> Void)? = nil) {
                 self.objects = objects
+                self.sink = sink
+                bytes.reserveCapacity(1 << 16)
             }
         }
     }
@@ -25,6 +34,37 @@
             case object = 6
             case cycle = 7
             case fields = 8
+            case again = 9
+        }
+
+        /// How the values of one type are written.
+        enum Plan {
+            /// As their memory: the type holds no references.
+            case memory
+            /// As their UTF-8.
+            case text
+            /// As an array.
+            case run
+            /// Not at all: the type writes its own mirror.
+            case refused
+            /// Through `Mirror`.
+            case reflected
+            /// As the value it gives for itself.
+            case canonical
+        }
+
+        /// An array's storage: where its elements lie, how many, and of what type.
+        struct Run: Hashable {
+            let address: UInt
+            let count: Int
+            let type: ObjectIdentifier
+        }
+
+        /// Hands the bytes so far to the sink, if there is one.
+        func flush() {
+            guard let sink, !bytes.isEmpty else { return }
+            sink(bytes.span.bytes)
+            bytes.removeAll(keepingCapacity: true)
         }
 
         func number(_ value: Int) {
@@ -47,9 +87,9 @@
             let identifier = ObjectIdentifier(type)
             if let seen = types[identifier] {
                 bytes.append(0)
-                number(Int(seen))
+                number(seen)
             } else {
-                types[identifier] = UInt64(types.count)
+                types[identifier] = types.count
                 bytes.append(1)
                 text(_typeName(type, qualified: true))
             }
@@ -59,6 +99,7 @@
         func memory<Value>(_ value: Value) {
             number(MemoryLayout<Value>.size)
             withUnsafeBytes(of: value) { unsafe bytes.append(contentsOf: $0) }
+            if bytes.count >= 1 << 16 { flush() }
         }
 
         /// A value held as `Any`, written as the type it holds.
@@ -67,38 +108,112 @@
             return _openExistential(value, do: opened)
         }
 
-        /// A dynamic cast, which looks through the existential that holds a value.
-        static func cast<Value, Target>(_ value: Value, to target: Target.Type) -> Target? {
-            value as? Target
+        /// How values of a type are written, decided from one of them. A type a value is held in as an existential
+        /// is reflected, since what it holds varies from value to value.
+        func plan<Value>(for value: Value) -> Plan {
+            let identifier = ObjectIdentifier(Value.self)
+            if let plan = plans[identifier] { return plan }
+            let plan: Plan
+            if _isPOD(Value.self) {
+                plan = .memory
+            } else if Value.self == String.self || Value.self == Substring.self || Value.self == Character.self {
+                plan = .text
+            } else if Mirror(reflecting: value).subjectType != Value.self {
+                plan = .reflected
+            } else if value is any Swift.Mirror.Canonical {
+                plan = .canonical
+            } else if value is any Swift.Mirror.Contiguous {
+                plan = .run
+            } else if value is any CustomReflectable, !_typeName(Value.self, qualified: true).hasPrefix("Swift.") {
+                plan = .refused
+            } else {
+                plan = .reflected
+            }
+            plans[identifier] = plan
+            return plan
         }
 
-        /// A value and its parts, or false where reflection cannot show it whole. A value held in an existential
-        /// is written as the type it holds, through its mirror.
+        /// A value and its parts, or false where reflection cannot show it whole.
         func write<Value>(_ value: Value) -> Bool {
-            if _isPOD(Value.self) {
+            switch plan(for: value) {
+            case .memory:
                 type(Value.self)
                 kind(.memory)
                 memory(value)
                 return true
-            }
-            let mirror = Mirror(reflecting: value)
-            let subject = mirror.subjectType
-            let held = subject != Value.self
-            type(subject)
-            if subject == String.self || subject == Substring.self || subject == Character.self {
+
+            case .text:
+                type(Value.self)
                 kind(.text)
                 text(String(describing: value))
                 return true
+
+            case .run:
+                type(Value.self)
+                guard let run = value as? any Swift.Mirror.Contiguous else { return false }
+                return run.write(into: self)
+
+            case .refused:
+                return false
+
+            case .reflected:
+                return reflect(value)
+
+            case .canonical:
+                guard let canonical = value as? any Swift.Mirror.Canonical else { return false }
+                type(Value.self)
+                return write(any: canonical.canonical)
             }
-            if let run = value as? any Swift.Mirror.Contiguous, run.write(into: self) {
+        }
+
+        /// The elements of an array: its storage as which one it was when met before, or else the count and the
+        /// elements, as their memory in one piece when they hold no references.
+        func run<Element>(_ elements: UnsafeBufferPointer<Element>, of array: Any, as type: Any.Type) -> Bool {
+            let address = UInt(bitPattern: elements.baseAddress)
+            if again(Run(address: address, count: elements.count, type: ObjectIdentifier(type)), keeping: array) {
                 return true
             }
-            if value is any CustomReflectable, !_typeName(subject, qualified: true).hasPrefix("Swift.") {
+            kind(.run)
+            number(elements.count)
+            if _isPOD(Element.self) {
+                number(MemoryLayout<Element>.stride)
+                flush()
+                let raw = UnsafeRawBufferPointer(elements)
+                if let sink {
+                    sink(unsafe RawSpan(_unsafeBytes: raw))
+                } else {
+                    unsafe bytes.append(contentsOf: raw)
+                }
+                return true
+            }
+            for index in elements.indices {
+                guard write(unsafe elements[index]) else { return false }
+            }
+            return true
+        }
+
+        /// Whether an array's storage was met before, written as which one it was; the first time it is
+        /// remembered, and the array kept alive.
+        func again(_ run: Run, keeping value: Any) -> Bool {
+            guard run.count > 0 else { return false }
+            if let seen = runs[run] {
+                kind(.again)
+                number(seen)
+                return true
+            }
+            runs[run] = runs.count
+            kept.append(value)
+            return false
+        }
+
+        /// A value through its mirror. A value held in an existential is written as the type it holds.
+        func reflect<Value>(_ value: Value) -> Bool {
+            let mirror = Mirror(reflecting: value)
+            let subject = mirror.subjectType
+            if subject != Value.self, mirror.children.isEmpty, mirror.displayStyle != .collection {
                 return false
             }
-            if held, mirror.children.isEmpty, mirror.displayStyle != .collection {
-                return false
-            }
+            type(subject)
             switch mirror.displayStyle {
             case .optional:
                 kind(.optional)
@@ -112,6 +227,7 @@
             case .enum:
                 kind(.choice)
                 guard let child = mirror.children.first else {
+                    guard subject == Value.self else { return false }
                     number(0)
                     memory(value)
                     return true
@@ -160,10 +276,11 @@
                 return true
 
             default:
-                let children = Array(mirror.children)
-                guard !children.isEmpty || mirror.displayStyle == .collection else { return false }
+                let children = mirror.children
+                let count = children.count
+                guard count > 0 || mirror.displayStyle == .collection else { return false }
                 kind(mirror.displayStyle == .collection ? .run : .fields)
-                number(children.count)
+                number(count)
                 for child in children {
                     guard write(any: child.value) else { return false }
                 }

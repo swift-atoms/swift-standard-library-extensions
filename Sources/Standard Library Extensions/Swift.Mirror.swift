@@ -3,7 +3,8 @@
         /// The bytes of a value's structure as reflection shows it, the same in every process and every run: a key
         /// for the value that outlives the process, which `Hasher` is not.
         ///
-        /// Each part is written with its type's name, so values of different types never meet. A part whose type
+        /// A value of a `Swift.Mirror.Canonical` type is written as the value it gives for itself. Each part is
+        /// written with its type's name, so values of different types never meet. A part whose type
         /// holds no references is written as its memory; a string as its UTF-8; an array of such parts as its
         /// elements' memory; a dictionary or set with its members in the order of their own bytes, never the
         /// order of the process's hashing; an enum with its case; anything else as its stored properties, one by
@@ -18,6 +19,17 @@
             let structure = Structure()
             guard structure.write(subject) else { return nil }
             return structure.bytes
+        }
+
+        /// `bytes(of:)` handed to `sink` a piece at a time as they are written, rather than gathered: the pieces
+        /// are the bytes, in order. False, after some pieces perhaps, where `bytes(of:)` is nil.
+        public static func bytes<Subject>(of subject: Subject, into sink: (borrowing RawSpan) -> Void) -> Bool {
+            withoutActuallyEscaping(sink) { sink in
+                let structure = Structure(sink: sink)
+                guard structure.write(subject) else { return false }
+                structure.flush()
+                return true
+            }
         }
     }
 #endif

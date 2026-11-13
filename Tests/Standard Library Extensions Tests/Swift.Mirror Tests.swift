@@ -140,3 +140,43 @@ struct `Mirror - Extensions` {
         second.next = nil
     }
 }
+
+extension `Mirror - Extensions` {
+    struct Pair {
+        var first: [Point]
+        var second: [Point]
+    }
+
+    @Test
+    func `An array met again is written as which one it was, and pieces handed on are the bytes`() throws {
+        let shared = (0..<1000).map { Point(x: Double($0), y: 1) }
+        let copy = shared.map { $0 }
+        let once = try #require(Mirror.bytes(of: Pair(first: shared, second: shared)))
+        let twice = try #require(Mirror.bytes(of: Pair(first: shared, second: copy)))
+        #expect(once.count < twice.count - 15_000)
+        #expect(Mirror.bytes(of: Pair(first: shared, second: shared)) == once)
+        let named = Self.named(.group([.circle(1), .empty], "g"))
+        var pieces: [UInt8] = []
+        let whole = Mirror.bytes(of: named) { piece in
+            piece.withUnsafeBytes { unsafe pieces.append(contentsOf: $0) }
+        }
+        #expect(whole)
+        #expect(pieces == Mirror.bytes(of: named))
+        #expect(!Mirror.bytes(of: Holding(action: {})) { _ in })
+    }
+}
+
+extension `Mirror - Extensions` {
+    struct Cached: Swift.Mirror.Canonical {
+        var name: String
+        var hash: Int
+        var canonical: Any { name }
+    }
+
+    @Test
+    func `A canonical type is written as the value it gives for itself`() {
+        #expect(Mirror.bytes(of: Cached(name: "a", hash: 1)) == Mirror.bytes(of: Cached(name: "a", hash: 2)))
+        #expect(Mirror.bytes(of: Cached(name: "a", hash: 1)) != Mirror.bytes(of: Cached(name: "b", hash: 1)))
+        #expect(Mirror(reflecting: Cached(name: "a", hash: 1)).children.map(\.label) == ["name", "hash"])
+    }
+}
