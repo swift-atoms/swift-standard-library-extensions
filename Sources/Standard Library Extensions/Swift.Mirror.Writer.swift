@@ -10,7 +10,7 @@
             var bytes: [UInt8] = []
             let sink: ((borrowing RawSpan) -> Void)?
             var types: [ObjectIdentifier: Int] = [:]
-            var plans: [ObjectIdentifier: Plan] = [:]
+            var plans: [ObjectIdentifier: Known] = [:]
             var runs: [Run: Int] = [:]
             var kept: [Any] = []
             var objects: [ObjectIdentifier]
@@ -55,6 +55,13 @@
             case canonical
             /// As it writes itself.
             case written
+        }
+
+        /// What the writer knows of a type: how its values are written, and its order among the types named, once
+        /// it has been named.
+        struct Known {
+            let plan: Plan
+            var order: Int?
         }
 
         /// An array's storage: where its elements lie, how many, and of what type.
@@ -117,7 +124,7 @@
         /// is reflected, since what it holds varies from value to value.
         func plan<Value>(for value: Value) -> Plan {
             let identifier = ObjectIdentifier(Value.self)
-            if let plan = plans[identifier] { return plan }
+            if let known = plans[identifier] { return known.plan }
             let plan: Plan
             if _isPOD(Value.self) {
                 plan = plain(value) ? .memory : .reflected
@@ -136,8 +143,22 @@
             } else {
                 plan = .reflected
             }
-            plans[identifier] = plan
+            plans[identifier] = Known(plan: plan, order: nil)
             return plan
+        }
+
+        /// A type written through what is known of it: by name the first time, by its order after that.
+        func type<Value>(of value: Value) {
+            let identifier = ObjectIdentifier(Value.self)
+            if let order = plans[identifier]?.order {
+                bytes.append(0)
+                number(order)
+                return
+            }
+            type(Value.self)
+            if let order = types[identifier], let plan = plans[identifier]?.plan {
+                plans[identifier] = Known(plan: plan, order: order)
+            }
         }
 
         /// A number in floating point, as its memory.
@@ -150,6 +171,7 @@
         /// time it is remembered, and false. A `Swift.Mirror.Written` type that writes an array's elements itself
         /// asks this first, so a shared part is written once.
         public func again<Element>(_ array: [Element]) -> Bool {
+            guard !Self.small(array.count, of: Element.self) else { return false }
             let address = array.withUnsafeBufferPointer { UInt(bitPattern: $0.baseAddress) }
             return again(Run(address: address, count: array.count, type: ObjectIdentifier([Element].self)), keeping: array)
         }
@@ -160,7 +182,7 @@
         /// the bytes of a case's payload that a smaller case leaves unused are whatever they were.
         func plain<Value>(_ value: Value) -> Bool {
             guard _isPOD(Value.self) else { return false }
-            if let plan = plans[ObjectIdentifier(Value.self)] { return plan == .memory }
+            if let known = plans[ObjectIdentifier(Value.self)] { return known.plan == .memory }
             if MemoryLayout<Value>.size <= 1 { return true }
             if Value.self is any BinaryInteger.Type || Value.self is any BinaryFloatingPoint.Type || Value.self == Bool.self {
                 return true
@@ -188,19 +210,19 @@
         public func write<Value>(_ value: Value) -> Bool {
             switch plan(for: value) {
             case .memory:
-                type(Value.self)
+                type(of: value)
                 kind(.memory)
                 memory(value)
                 return true
 
             case .text:
-                type(Value.self)
+                type(of: value)
                 kind(.text)
                 text(String(describing: value))
                 return true
 
             case .run:
-                type(Value.self)
+                type(of: value)
                 guard let run = value as? any Swift.Mirror.Contiguous else { return false }
                 return run.write(into: self)
 
@@ -212,13 +234,13 @@
 
             case .written:
                 guard let written = value as? any Swift.Mirror.Written else { return false }
-                type(Value.self)
+                type(of: value)
                 kind(.written)
                 return written.write(into: self)
 
             case .canonical:
                 guard let canonical = value as? any Swift.Mirror.Canonical else { return false }
-                type(Value.self)
+                type(of: value)
                 return write(any: canonical.canonical)
             }
         }
@@ -227,7 +249,7 @@
         /// elements, as their memory in one piece when they hold no references.
         func run<Element>(_ elements: UnsafeBufferPointer<Element>, of array: Any, as type: Any.Type) -> Bool {
             let address = UInt(bitPattern: elements.baseAddress)
-            if again(Run(address: address, count: elements.count, type: ObjectIdentifier(type)), keeping: array) {
+            if !Self.small(elements.count, of: Element.self), again(Run(address: address, count: elements.count, type: ObjectIdentifier(type)), keeping: array) {
                 return true
             }
             kind(.run)
@@ -247,6 +269,12 @@
                 guard write(unsafe elements[index]) else { return false }
             }
             return true
+        }
+
+        /// Whether an array is too small to be worth remembering: under 256 bytes of elements, which cost less to
+        /// write again than to look up.
+        static func small<Element>(_ count: Int, of element: Element.Type) -> Bool {
+            count * MemoryLayout<Element>.stride < 256
         }
 
         /// Whether an array's storage was met before, written as which one it was; the first time it is

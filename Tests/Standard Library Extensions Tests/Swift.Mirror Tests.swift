@@ -238,7 +238,7 @@ extension `Mirror - Extensions` {
 
     @Test
     func `A written type is written as it writes itself`() {
-        let points = [Point(x: 1, y: 2), Point(x: 3, y: 4)]
+        let points = (0..<100).map { Point(x: Double($0), y: 2) }
         #expect(Mirror.bytes(of: Stroke.line(points, 1)) == Mirror.bytes(of: Stroke.line(points.map { $0 }, 1)))
         #expect(Mirror.bytes(of: Stroke.line(points, 1)) != Mirror.bytes(of: Stroke.line(points, 2)))
         #expect(Mirror.bytes(of: Stroke.line(points, 1)) != Mirror.bytes(of: Stroke.none))
