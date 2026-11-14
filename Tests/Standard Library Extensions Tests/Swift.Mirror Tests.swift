@@ -146,20 +146,23 @@ extension `Mirror - Extensions` {
     }
 
     @Test
-    func `An array met again is written as which one it was, and pieces handed on are the bytes`() throws {
+    func `An array met again is written once, and pieces handed on are the bytes`() throws {
         let shared = (0..<1000).map { Point(x: Double($0), y: 1) }
         let copy = shared.map { $0 }
         let once = try #require(Mirror.bytes(of: Pair(first: shared, second: shared)))
-        let twice = try #require(Mirror.bytes(of: Pair(first: shared, second: copy)))
-        #expect(once.count < twice.count - 15_000)
-        #expect(Mirror.bytes(of: Pair(first: shared, second: shared)) == once)
-        let named = Self.named(.group([.circle(1), .empty], "g"))
-        var pieces: [UInt8] = []
-        let whole = Mirror.bytes(of: named) { piece in
-            piece.withUnsafeBytes { unsafe pieces.append(contentsOf: $0) }
+        #expect(once.count < 17_000)
+        #expect(Mirror.bytes(of: Pair(first: shared, second: copy)) == once)
+        for value in [Self.named(.group([.circle(1), .empty], "g")), Self.named(.group(Array(repeating: .circle(1), count: 40), "g"))] {
+            var pieces: [UInt8] = []
+            let whole = Mirror.bytes(of: value) { piece in
+                piece.withUnsafeBytes { unsafe pieces.append(contentsOf: $0) }
+            }
+            #expect(whole)
+            #expect(pieces == Mirror.bytes(of: value))
         }
-        #expect(whole)
-        #expect(pieces == Mirror.bytes(of: named))
+        var pieces: [UInt8] = []
+        #expect(Mirror.bytes(of: Pair(first: shared, second: copy)) { piece in piece.withUnsafeBytes { unsafe pieces.append(contentsOf: $0) } })
+        #expect(pieces == once)
         #expect(!Mirror.bytes(of: Holding(action: {})) { _ in })
     }
 }
@@ -241,12 +244,13 @@ extension `Mirror - Extensions` {
             case .line(let points, let width):
                 writer.number(0)
                 writer.float(width)
-                guard !writer.again(points) else { return true }
-                writer.number(points.count)
-                for point in points {
-                    guard writer.write(point) else { return false }
+                return writer.shared(points) { writer in
+                    writer.number(points.count)
+                    for point in points {
+                        guard writer.write(point) else { return false }
+                    }
+                    return true
                 }
-                return true
             case .none:
                 writer.number(1)
                 return true
@@ -260,6 +264,131 @@ extension `Mirror - Extensions` {
         #expect(Mirror.bytes(of: Stroke.line(points, 1)) == Mirror.bytes(of: Stroke.line(points.map { $0 }, 1)))
         #expect(Mirror.bytes(of: Stroke.line(points, 1)) != Mirror.bytes(of: Stroke.line(points, 2)))
         #expect(Mirror.bytes(of: Stroke.line(points, 1)) != Mirror.bytes(of: Stroke.none))
-        #expect(Mirror.bytes(of: [Stroke.line(points, 1), .line(points, 1)])!.count < Mirror.bytes(of: [Stroke.line(points, 1), .line(points.map { $0 }, 1)])!.count)
+        #expect(Mirror.bytes(of: [Stroke.line(points, 1), .line(points, 1)]) == Mirror.bytes(of: [Stroke.line(points, 1), .line(points.map { $0 }, 1)]))
+        #expect(Mirror.bytes(of: [Stroke.line(points, 1), .line(points, 1)])!.count < Mirror.bytes(of: [Stroke.line(points, 1), .line(points.map { Point(x: $0.x, y: 3) }, 1)])!.count)
+    }
+}
+
+extension `Mirror - Extensions` {
+    struct Sprite {
+        var x: Double
+        var y: Double
+        var radius: Double
+    }
+
+    struct Picture {
+        var elements: [Element]
+    }
+
+    indirect enum Element {
+        case sprites([Sprite])
+        case group(Picture)
+    }
+
+    struct Drawn: Swift.Mirror.Written {
+        var elements: [Sprite]
+
+        func write(into writer: Swift.Mirror.Writer) -> Bool {
+            writer.shared(elements) { writer in
+                writer.number(UInt64(elements.count))
+                for sprite in elements {
+                    writer.float(sprite.x)
+                    writer.float(sprite.y)
+                    writer.float(sprite.radius)
+                }
+                return true
+            }
+        }
+    }
+
+    static let sprites = (0..<100).map { Sprite(x: Double($0) / 2, y: 40 - Double($0) / 4, radius: 2) }
+
+    @Test
+    func `Equal values give equal bytes whether an array is held twice or copied`() {
+        let shared = Self.sprites
+        let fresh = Self.sprites.map { $0 }
+        let sharing = Picture(elements: [.sprites(shared), .sprites(shared)])
+        let apart = Picture(elements: [.sprites(shared), .sprites(fresh)])
+        #expect(Mirror.bytes(of: sharing) != nil)
+        #expect(Mirror.bytes(of: sharing) == Mirror.bytes(of: apart))
+        #expect(Mirror.bytes(of: [Drawn(elements: shared), Drawn(elements: shared)]) == Mirror.bytes(of: [Drawn(elements: shared), Drawn(elements: fresh)]))
+    }
+
+    @Test
+    func `Equal values give equal bytes whether a nested value is held twice or copied`() {
+        let inner = Picture(elements: Self.sprites.map { Element.sprites([$0]) })
+        let copy = Picture(elements: inner.elements.map { $0 })
+        let nested = Picture(elements: [.group(inner), .group(inner)])
+        let unshared = Picture(elements: [.group(inner), .group(copy)])
+        #expect(Mirror.bytes(of: nested) != nil)
+        #expect(Mirror.bytes(of: nested) == Mirror.bytes(of: unshared))
+        let deep = Picture(elements: Self.sprites.map { Element.sprites([$0].map { $0 }) })
+        #expect(Mirror.bytes(of: Picture(elements: [.group(inner), .group(deep)])) == Mirror.bytes(of: nested))
+    }
+
+    @Test
+    func `Unequal arrays give different bytes, held twice or not`() {
+        let base = (0..<1000).map { Point(x: Double($0), y: 1) }
+        var middle = base
+        middle[517].y = 2
+        let longer = base + [Point(x: 0, y: 0)]
+        let values: [[[Point]]?] = [
+            [base, base], [base, middle], [middle, base], [base, longer], [base], [base, [], base], [base, base, []],
+            [], nil, [[]],
+        ]
+        let bytes = values.map { Mirror.bytes(of: $0) }
+        #expect(Set(bytes.compactMap { $0 }).count == values.count)
+        let nestings: [[[Int]]] = [[[1, 2], [3]], [[1], [2, 3]], [[1, 2, 3]], [[1, 2, 3], []]]
+        #expect(Set(nestings.compactMap { Mirror.bytes(of: $0) }).count == nestings.count)
+        let large = Array(0..<100)
+        let deeper: [[[Int]]] = [[large, large], [large + large], [large, [], large], [large], [large, large.reversed()]]
+        #expect(Set(deeper.compactMap { Mirror.bytes(of: $0) }).count == deeper.count)
+        let drawn = [Drawn(elements: Self.sprites), Drawn(elements: Self.sprites.dropLast() + [Sprite(x: 0, y: 0, radius: 3)])]
+        #expect(Mirror.bytes(of: [drawn[0], drawn[0]]) != Mirror.bytes(of: drawn))
+    }
+
+    @Test
+    func `A block does not depend on what was written before it`() {
+        let marks: [Choice] = (0..<100).map { $0 % 2 == 0 ? .small(UInt8($0)) : .none }
+        let alone = Swift.Mirror.Writer()
+        #expect(alone.write(marks))
+        let after = Swift.Mirror.Writer()
+        #expect(after.write((0..<100).map { Choice.large(UInt64($0), 1) }))
+        #expect(after.write(marks))
+        #expect(alone.blocks.count == 1)
+        #expect(after.blocks.count == 2)
+        #expect(after.blocks.last == alone.blocks.last)
+    }
+
+    struct Fresh: Swift.Mirror.Written {
+        var values: [Int]
+
+        func write(into writer: Swift.Mirror.Writer) -> Bool {
+            for value in values {
+                guard Self.write(Array(repeating: value, count: 64), into: writer) else { return false }
+            }
+            return true
+        }
+
+        static func write(_ array: [Int], into writer: Swift.Mirror.Writer) -> Bool {
+            writer.shared(array) { writer in
+                for value in array { writer.number(UInt64(value)) }
+                return true
+            }
+        }
+    }
+
+    @Test
+    func `Storage freed and reused while writing is not taken for an array met before`() {
+        let fresh = Swift.Mirror.Writer()
+        #expect(Fresh(values: [1, 2, 3, 1]).write(into: fresh))
+        let arrays = [1, 2, 3, 1].map { Array(repeating: $0, count: 64) }
+        let held = Swift.Mirror.Writer()
+        for array in arrays {
+            #expect(Fresh.write(array, into: held))
+        }
+        #expect(fresh.bytes == held.bytes)
+        #expect(fresh.blocks.count == 3)
+        #expect(!Swift.Mirror.Writer().again(arrays[0]))
     }
 }

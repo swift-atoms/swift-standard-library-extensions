@@ -3,22 +3,34 @@
         /// The writer of `bytes(of:)`: the bytes not yet handed on, where they go, and what it has learned on the way.
         /// A `Swift.Mirror.Written` type writes itself through it.
         ///
-        /// It names each type by its order of first appearance after the first time, decides once per type how its
-        /// values are written, writes an array whose storage it met before as which one it was, and keeps those
-        /// arrays alive until it is done, so that no storage it remembers is freed and reused under it.
+        /// It names each type by its order of first appearance after the first time, and decides once per type how
+        /// its values are written. An array of 256 bytes or more is written on its own, as a block that does not
+        /// depend on what was written before it, and a block equal to one written before as which one that was:
+        /// so what is written depends on the value alone, never on which of its arrays share storage. Sharing only
+        /// saves work: storage met before is known by its address, and kept alive until the writer is done, so that
+        /// no storage it remembers is freed and reused under it.
         public final class Writer {
             var bytes: [UInt8] = []
             let sink: ((borrowing RawSpan) -> Void)?
             var types: [ObjectIdentifier: Int] = [:]
-            var plans: [ObjectIdentifier: Known] = [:]
+            var plans: [ObjectIdentifier: Known]
             var runs: [Run: Int] = [:]
+            var blocks: [[UInt8]] = []
+            var contents: [Int: [Int]] = [:]
             var kept: [Any] = []
             var objects: [ObjectIdentifier]
+            var lowest: Int = .max
 
-            init(objects: [ObjectIdentifier] = [], sink: ((borrowing RawSpan) -> Void)? = nil) {
+            init(
+                objects: [ObjectIdentifier] = [],
+                plans: [ObjectIdentifier: Known] = [:],
+                sink: ((borrowing RawSpan) -> Void)? = nil,
+                capacity: Int = 1 << 16
+            ) {
                 self.objects = objects
+                self.plans = plans
                 self.sink = sink
-                bytes.reserveCapacity(1 << 16)
+                bytes.reserveCapacity(capacity)
             }
         }
     }
@@ -124,13 +136,28 @@
             if bytes.count >= 1 << 16 { flush() }
         }
 
-        /// Whether an array's storage was met before in this writing, written as which one it was if so; the first
-        /// time it is remembered, and false. A `Swift.Mirror.Written` type that writes an array's elements itself
-        /// asks this first, so a shared part is written once.
+        /// Whether an array's elements need not be written because they were written before: never, and nothing
+        /// is written. Skipping an array met again by its storage would make the bytes depend on which arrays share
+        /// storage rather than on the value; `shared(_:_:)` pays for a shared array once without that.
         public func again<Element>(_ array: [Element]) -> Bool {
-            guard !Self.small(array.count, of: Element.self) else { return false }
-            let address = array.withUnsafeBufferPointer { UInt(bitPattern: $0.baseAddress) }
-            return again(Run(address: address, count: array.count, type: ObjectIdentifier([Element].self)), keeping: array)
+            false
+        }
+
+        /// An array written by `contents`, which must write what the array holds and nothing else, the same for
+        /// equal arrays: a `Swift.Mirror.Written` type writes an array met often through this, so a shared array
+        /// is paid for once. An array under 256 bytes of elements is written in place; a larger one on its own, as
+        /// a block of what `contents` writes to the writer it is given, with types named afresh, and a block equal
+        /// to one written before as which one that was. Equal arrays give equal bytes whether they share storage or
+        /// not; storage met before skips `contents`. False where `contents` is.
+        public func shared<Element>(_ array: [Element], _ contents: (Swift.Mirror.Writer) -> Bool) -> Bool {
+            guard !Self.small(array.count, of: Element.self) else {
+                kind(.inline)
+                return contents(self)
+            }
+            let run = array.withUnsafeBufferPointer {
+                unsafe Self.run(address: $0.baseAddress, count: $0.count, of: Element.self, as: [Element].self, own: true)
+            }
+            return block(run, keeping: array, contents)
         }
 
         /// Whether a value's memory holds exactly its state, every byte of it, the same for equal values in every
@@ -202,50 +229,132 @@
             }
         }
 
-        /// The elements of an array: its storage as which one it was when met before, or else the count and the
-        /// elements, as their memory in one piece when they hold no references.
+        /// The elements of an array: the count and the elements, as their memory in one piece when they hold no
+        /// references; in place when under 256 bytes, else as a block.
         func run<Element>(_ elements: UnsafeBufferPointer<Element>, of array: Any, as type: Any.Type) -> Bool {
-            let address = UInt(bitPattern: elements.baseAddress)
-            if !Self.small(elements.count, of: Element.self), again(Run(address: address, count: elements.count, type: ObjectIdentifier(type)), keeping: array) {
-                return true
+            let memory: Bool
+            if let first = unsafe elements.first {
+                memory = plain(first) && MemoryLayout<Element>.size == MemoryLayout<Element>.stride
+            } else {
+                memory = false
             }
-            kind(.run)
-            number(elements.count)
-            if let first = unsafe elements.first, plain(first), MemoryLayout<Element>.size == MemoryLayout<Element>.stride {
-                number(MemoryLayout<Element>.stride)
-                flush()
-                let raw = UnsafeRawBufferPointer(elements)
-                if let sink {
-                    sink(unsafe RawSpan(_unsafeBytes: raw))
-                } else {
-                    unsafe bytes.append(contentsOf: raw)
+            func contents(_ writer: Swift.Mirror.Writer) -> Bool {
+                writer.kind(.run)
+                writer.number(elements.count)
+                if memory {
+                    writer.number(MemoryLayout<Element>.stride)
+                    unsafe writer.bytes.append(contentsOf: UnsafeRawBufferPointer(elements))
+                    return true
+                }
+                for index in elements.indices {
+                    guard writer.write(unsafe elements[index]) else { return false }
                 }
                 return true
             }
-            for index in elements.indices {
-                guard write(unsafe elements[index]) else { return false }
-            }
-            return true
+            guard !Self.small(elements.count, of: Element.self) else { return contents(self) }
+            let run = unsafe Self.run(address: elements.baseAddress, count: elements.count, of: Element.self, as: type, own: false)
+            return block(run, keeping: array, contents)
         }
 
-        /// Whether an array is too small to be worth remembering: under 256 bytes of elements, which cost less to
-        /// write again than to look up.
+        /// Whether an array is small enough to write in place: under 256 bytes of elements, which cost less to
+        /// write again than to set apart.
         static func small<Element>(_ count: Int, of element: Element.Type) -> Bool {
             count * MemoryLayout<Element>.stride < 256
         }
 
-        /// Whether an array's storage was met before, written as which one it was; the first time it is
-        /// remembered, and the array kept alive.
-        func again(_ run: Run, keeping value: Any) -> Bool {
-            guard run.count > 0 else { return false }
-            if let seen = runs[run] {
+        /// An array's storage, to know it again by, or nil where its address may not be its own: an array of
+        /// class references may be lent a copy of an Objective-C array's elements, freed when the loan ends.
+        static func run<Element>(address: UnsafePointer<Element>?, count: Int, of element: Element.Type, as type: Any.Type, own: Bool) -> Run? {
+            #if _runtime(_ObjC)
+                guard !_isBridgedVerbatimToObjectiveC(Element.self) else { return nil }
+            #endif
+            return Run(address: UInt(bitPattern: address), count: count, type: ObjectIdentifier(type), own: own)
+        }
+
+        /// A writer for a part written on its own: what this one knows of types, but none named yet, the
+        /// references on the way down, and no sink.
+        func apart() -> Swift.Mirror.Writer {
+            Swift.Mirror.Writer(
+                objects: objects,
+                plans: plans.mapValues { Known(plan: $0.plan, order: nil) },
+                capacity: 0
+            )
+        }
+
+        /// An array as a block: as which block it was when its storage was met before; else what `contents` writes
+        /// to a writer apart, as which block it was when an equal block was written before, or else whole.
+        /// Storage is remembered only when the block refers to no reference above it, so that its block is the
+        /// same wherever it is met; it is kept alive until the writer is done.
+        func block(_ run: Run?, keeping array: Any, _ contents: (Swift.Mirror.Writer) -> Bool) -> Bool {
+            if let run, let index = runs[run] {
                 kind(.again)
-                number(seen)
+                number(index)
                 return true
             }
-            runs[run] = runs.count
-            kept.append(value)
-            return false
+            let part = apart()
+            guard contents(part) else { return false }
+            lowest = min(lowest, part.lowest)
+            let block = part.bytes
+            let print = Self.print(of: block)
+            let index: Int
+            if let earlier = self.contents[print]?.first(where: { Self.same(blocks[$0], block) }) {
+                index = earlier
+                kind(.again)
+                number(index)
+            } else {
+                index = blocks.count
+                blocks.append(block)
+                self.contents[print, default: []].append(index)
+                kind(.block)
+                number(block.count)
+                if let sink {
+                    flush()
+                    sink(block.span.bytes)
+                } else {
+                    bytes.append(contentsOf: block)
+                }
+            }
+            if let run, part.lowest >= objects.count {
+                runs[run] = index
+                kept.append(array)
+            }
+            return true
+        }
+
+        /// Whether two blocks hold the same bytes, compared eight at a time.
+        static func same(_ first: [UInt8], _ second: [UInt8]) -> Bool {
+            guard first.count == second.count else { return false }
+            return first.withUnsafeBytes { first in
+                second.withUnsafeBytes { second in
+                    var offset = 0
+                    while offset + 8 <= first.count {
+                        let left = unsafe first.loadUnaligned(fromByteOffset: offset, as: UInt64.self)
+                        let right = unsafe second.loadUnaligned(fromByteOffset: offset, as: UInt64.self)
+                        guard left == right else { return false }
+                        offset += 8
+                    }
+                    while offset < first.count {
+                        guard unsafe first[offset] == second[offset] else { return false }
+                        offset += 1
+                    }
+                    return true
+                }
+            }
+        }
+
+        /// A block's length and some of its bytes, spread over it, mixed: equal blocks give the same, so only
+        /// blocks with the same print need comparing whole.
+        static func print(of block: [UInt8]) -> Int {
+            var hasher = Hasher()
+            hasher.combine(block.count)
+            let step = Swift.max(1, block.count / 64)
+            var index = 0
+            while index < block.count {
+                hasher.combine(block[index])
+                index += step
+            }
+            hasher.combine(block.last)
+            return hasher.finalize()
         }
 
         /// A value through its mirror. A value held in an existential is written as the type it holds. A case
@@ -296,8 +405,9 @@
                 kind(.unordered)
                 var members: [[UInt8]] = []
                 for child in mirror.children {
-                    let member = Swift.Mirror.Writer(objects: objects)
+                    let member = apart()
                     guard member.write(any: child.value) else { return false }
+                    lowest = min(lowest, member.lowest)
                     members.append(member.bytes)
                 }
                 members.sort { $0.lexicographicallyPrecedes($1) }
@@ -311,6 +421,7 @@
             case .class:
                 let identifier = ObjectIdentifier(value as AnyObject)
                 if let depth = objects.lastIndex(of: identifier) {
+                    lowest = min(lowest, depth)
                     kind(.cycle)
                     number(objects.count - depth)
                     return true

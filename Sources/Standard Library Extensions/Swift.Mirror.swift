@@ -8,7 +8,10 @@
         /// structure or tuple of them with no byte between its fields is written as its memory; a string as its UTF-8; an array of such parts as its
         /// elements' memory; a dictionary or set with its members in the order of their own bytes, never the
         /// order of the process's hashing; an enum with its case, a case without a payload as its one byte of memory, its raw value or its name; anything else as its stored properties, one by
-        /// one, through `Mirror`. A reference already on the way down is written as how far up it is.
+        /// one, through `Mirror`. A reference already on the way down is written as how far up it is. An array of
+        /// 256 bytes or more is written on its own, as a block that does not depend on what was written before it,
+        /// and a block equal to one written before as which one that was: the bytes are a function of the value
+        /// alone, the same whether its arrays share storage or are copies, and sharing only makes writing faster.
         ///
         /// Two values with equal bytes are equal in every stored property reflection shows. The reverse does not
         /// hold: equal values whose memory differs (`0.0` and `-0.0`, padding between fields, two spellings of

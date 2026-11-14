@@ -13,6 +13,8 @@
             case fields = 8
             case again = 9
             case written = 10
+            case inline = 11
+            case block = 12
         }
     }
 
